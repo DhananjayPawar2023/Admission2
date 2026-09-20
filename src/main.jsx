@@ -12,7 +12,6 @@ import {
   Menu,
   MessageCircle,
   ShieldCheck,
-  Sparkles,
   UsersRound,
   Send,
   User,
@@ -410,7 +409,7 @@ function MyInquiryModal({ isOpen, onClose, onStartNew }) {
                 </div>
                 <div className="tracker-row">
                   <span>Privacy Status</span>
-                  <span style={{ color: "#059669", fontWeight: 600, fontSize: "11.5px" }}>
+                  <span style={{ color: "#C05A21", fontWeight: 600, fontSize: "11.5px" }}>
                     Student Profile Secured & Hidden from Public
                   </span>
                 </div>
@@ -496,7 +495,7 @@ function Home({ onStart, onCompare, onStaff, onMyInquiry, session }) {
             <span className="art-note">Institute of Information & Communication Technology · MGM University</span>
           </div>
           <div className="art-card art-card-small">
-            <Sparkles size={16} />
+            <GraduationCap size={16} />
             <span>
               B.Tech Fees from<br />
               <strong>₹1,50,000 / yr</strong>
@@ -687,7 +686,7 @@ function Compare({ programs, facts, onBack, onInquiry, onMyInquiry, onStaff, ses
                         </span>
                       </div>
                       <div className="fee-scholarship-note">
-                        <Sparkles size={13} />
+                        <Award size={13} />
                         <span>150+ Merit Scholarships up to 100% tuition waiver</span>
                       </div>
                     </div>
@@ -804,7 +803,7 @@ function Compare({ programs, facts, onBack, onInquiry, onMyInquiry, onStaff, ses
                             {formatCurrency(p.annual_tuition_fee)} <small>/ year</small>
                           </span>
                           <div style={{ fontSize: "11px", color: "#C05A21", marginTop: "4px", fontWeight: 600 }}>
-                            ★ 150+ Merit Scholarships
+                            150+ Merit Scholarships Available
                           </div>
                         </td>
                       ))}
@@ -2008,7 +2007,7 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
                       {m.suggestions && m.suggestions.length > 0 && (
                         <div className="msg-suggestions-wrap">
                           <span className="msg-suggestions-label">
-                            <Sparkles size={12} color="#16a34a" /> Explore Related Topics:
+                            <HelpCircle size={13} color="#C05A21" /> Suggested Questions:
                           </span>
                           <div className="msg-suggestions-pills">
                             {m.suggestions.map((sug) => (
@@ -2028,7 +2027,7 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
                       {m.actionType === "submit_proposal" && (
                         <div className="in-chat-submission-card">
                           <div className="in-chat-card-header">
-                            <Sparkles size={16} color="#0c5b52" />
+                            <Award size={16} color="#C05A21" />
                             <strong>Official IICT Admissions Application Ready</strong>
                           </div>
                           <div className="in-chat-card-summary">
@@ -2111,7 +2110,7 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
           <div className="in-chat-action-card">
             <div>
               <p>Ready to reserve your seat?</p>
-              <small style={{ color: "#047857", fontSize: "11px" }}>
+              <small style={{ color: "#64748B", fontSize: "11px" }}>
                 Official 2026–27 counselling intake is open. Submit your inquiry for direct priority follow-up.
               </small>
             </div>
@@ -2257,18 +2256,18 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
               <div
                 className="progress-status-badge"
                 style={{
-                  backgroundColor: profile.progress === 100 ? "#d1fae5" : profile.progress >= 60 ? "#ecfdf5" : "#f3f4f6",
-                  color: profile.progress === 100 ? "#065f46" : profile.progress >= 60 ? "#047857" : "#4b5563"
+                  backgroundColor: profile.progress === 100 ? "#FFF0E5" : profile.progress >= 60 ? "#FFF8F3" : "#F8FAFC",
+                  color: profile.progress === 100 ? "#C05A21" : profile.progress >= 60 ? "#8C3A0B" : "#475569"
                 }}
               >
                 {profile.progress === 100 ? (
-                  <><CheckCircle2 size={13} style={{ color: "#059669" }} /> Profile 100% Ready</>
+                  <><CheckCircle2 size={13} style={{ color: "#C05A21" }} /> Profile 100% Ready</>
                 ) : profile.progress >= 60 ? (
-                  <><Sparkles size={13} style={{ color: "#047857" }} /> Reviewing Eligibility</>
+                  <><GraduationCap size={13} style={{ color: "#C05A21" }} /> Reviewing Eligibility</>
                 ) : profile.progress > 0 ? (
-                  <><Clock size={13} style={{ color: "#4b5563" }} /> Intake In Progress</>
+                  <><Clock size={13} style={{ color: "#475569" }} /> Intake In Progress</>
                 ) : (
-                  <><HelpCircle size={13} style={{ color: "#6b7280" }} /> Ready to Start</>
+                  <><HelpCircle size={13} style={{ color: "#64748B" }} /> Ready to Start</>
                 )}
               </div>
               <div className="progress-pct-value">
@@ -2282,8 +2281,8 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
                 style={{
                   width: `${profile.progress}%`,
                   background: profile.progress === 100
-                    ? "linear-gradient(90deg, #10b981, #059669)"
-                    : "linear-gradient(90deg, #0d4b3b, #10b981)"
+                    ? "linear-gradient(90deg, #001E32, #C05A21)"
+                    : "linear-gradient(90deg, #001E32, #F1B51C)"
                 }}
               />
             </div>
@@ -2337,7 +2336,7 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
             </div>
 
             <div className="progress-privacy-badge">
-              <Lock size={12} color="#059669" />
+              <Lock size={12} color="#64748B" />
               <span>Row-Level Security Active · Profile hidden from public</span>
             </div>
           </div>
@@ -3380,7 +3379,7 @@ function Dashboard({ session, onExit }) {
               >
                 <UserPlus size={15} /> {granting ? "Granting..." : "Grant Teacher Access"}
               </button>
-              {grantMsg && <small style={{ color: "#059669", fontWeight: 600 }}>{grantMsg}</small>}
+              {grantMsg && <small style={{ color: "#C05A21", fontWeight: 600 }}>{grantMsg}</small>}
             </form>
           </div>
 
@@ -3504,7 +3503,7 @@ function StaffLogin({ onSuccess, onBack }) {
               borderRadius: "5px",
               fontSize: "12px",
               fontWeight: mode === "signin" ? "700" : "500",
-              background: mode === "signin" ? "#0c5b52" : "transparent",
+              background: mode === "signin" ? "#001E32" : "transparent",
               color: mode === "signin" ? "#fff" : "#54635f"
             }}
           >
@@ -3518,7 +3517,7 @@ function StaffLogin({ onSuccess, onBack }) {
               borderRadius: "5px",
               fontSize: "12px",
               fontWeight: mode === "signup" ? "700" : "500",
-              background: mode === "signup" ? "#0c5b52" : "transparent",
+              background: mode === "signup" ? "#001E32" : "transparent",
               color: mode === "signup" ? "#fff" : "#54635f"
             }}
           >
@@ -3532,7 +3531,7 @@ function StaffLogin({ onSuccess, onBack }) {
               borderRadius: "5px",
               fontSize: "12px",
               fontWeight: mode === "reset" ? "700" : "500",
-              background: mode === "reset" ? "#0c5b52" : "transparent",
+              background: mode === "reset" ? "#001E32" : "transparent",
               color: mode === "reset" ? "#fff" : "#54635f"
             }}
           >
@@ -3565,7 +3564,7 @@ function StaffLogin({ onSuccess, onBack }) {
           )}
           {error && <div className="staff-error">{error}</div>}
           {infoMsg && (
-            <div style={{ background: "#edf7f2", border: "1px solid #c2e2d0", color: "#0c5b52", padding: "10px", borderRadius: "5px", fontSize: "11px", lineHeight: "1.4" }}>
+            <div style={{ background: "#FFF8F3", border: "1px solid #FCD7BD", color: "#8C3A0B", padding: "10px", borderRadius: "5px", fontSize: "11px", lineHeight: "1.4" }}>
               {infoMsg}
             </div>
           )}

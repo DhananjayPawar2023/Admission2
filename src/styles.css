@@ -276,9 +276,9 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
   border-color: var(--green);
 }
 .header-signin-btn.logged-in {
-  background: #edf6f2;
+  background: #FFF5EE;
   color: var(--green);
-  border-color: #a3c4b5;
+  border-color: #FCD7BD;
   font-weight: 700;
 }
 
@@ -286,20 +286,20 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 .in-chat-submission-card {
   margin-top: 14px;
   background: #ffffff;
-  border: 1.5px solid #cce3d7;
+  border: 1.5px solid #FCD7BD;
   border-radius: 12px;
   padding: 18px 20px;
-  box-shadow: 0 4px 18px rgba(12, 91, 82, 0.08);
+  box-shadow: 0 4px 18px rgba(192, 90, 33, 0.08);
 }
 .in-chat-card-header {
   display: flex;
   align-items: center;
   gap: 8px;
   font: 700 13.5px Manrope, sans-serif;
-  color: var(--green);
+  color: #001E32;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #edf2ee;
+  border-bottom: 1px solid #F1F5F9;
 }
 .in-chat-card-summary {
   display: grid;
@@ -361,9 +361,12 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .counselling-header h1 {
-  font: 800 clamp(32px, 3.5vw, 46px)/1.12 Manrope, sans-serif;
-  letter-spacing: -1.2px;
-  color: #111827;
+  font-family: var(--font-heading), 'Albert Sans', sans-serif;
+  font-size: clamp(30px, 3.2vw, 42px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #001E32;
   margin: 0 0 10px;
 }
 
@@ -418,7 +421,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #0d4b3b;
+  background: #C05A21;
   color: #ffffff;
   display: grid;
   place-items: center;
@@ -431,11 +434,12 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #d1fae5;
-  color: #065f46;
+  background: #F1F5F9;
+  color: #001E32;
   display: grid;
   place-items: center;
   font-size: 12px;
+  font-weight: 700;
 }
 
 .msg-author-label {
@@ -458,7 +462,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .msg-bubble-user {
-  background: #0d4b3b;
+  background: #001E32;
   color: #ffffff;
   border-radius: 18px;
   border-bottom-right-radius: 4px;
@@ -467,7 +471,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
   line-height: 1.5;
   max-width: 82%;
   white-space: pre-wrap;
-  box-shadow: 0 2px 6px rgba(13,75,59,0.15);
+  box-shadow: 0 2px 8px rgba(0, 30, 50, 0.15);
 }
 
 /* Typing indicator */
@@ -506,10 +510,10 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 
 .quick-chip-btn {
   background: #ffffff;
-  border: 1.5px solid #a3d4c8;
-  color: #0d4b3b;
+  border: 1.5px solid #FCD7BD;
+  color: #8C3A0B;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 7px 16px;
   border-radius: 24px;
   transition: all 0.2s ease;
@@ -517,8 +521,9 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .quick-chip-btn:hover {
-  background: #edf7f4;
-  border-color: #0d4b3b;
+  background: #FFF5EE;
+  border-color: #C05A21;
+  color: #C05A21;
   transform: translateY(-1px);
 }
 
@@ -536,8 +541,8 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .chat-input-container:focus-within {
-  border-color: #0d4b3b;
-  box-shadow: 0 4px 14px rgba(13,75,59,0.09);
+  border-color: #C05A21;
+  box-shadow: 0 4px 14px rgba(192, 90, 33, 0.12);
 }
 
 .chat-input-textarea {
@@ -557,7 +562,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: #0d4b3b;
+  background: #C05A21;
   color: #ffffff;
   display: grid;
   place-items: center;
@@ -568,7 +573,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .chat-send-btn:hover:not(:disabled) {
-  background: #08372b;
+  background: #A24816;
   transform: scale(1.03);
 }
 
@@ -606,7 +611,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 1.2px;
-  color: #0d4b3b;
+  color: #C05A21;
   text-transform: uppercase;
 }
 
@@ -616,20 +621,22 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
   gap: 6px;
   font-size: 11.5px;
   font-weight: 600;
-  color: #059669;
+  color: #C05A21;
 }
 
 .sidebar-live-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 0 3px #d1fae5;
+  background: #C05A21;
+  box-shadow: 0 0 0 3px rgba(192, 90, 33, 0.2);
 }
 
 .sidebar-title {
-  font: 800 20px Manrope, sans-serif;
-  color: #111827;
+  font-family: var(--font-heading), 'Albert Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #001E32;
   margin: 4px 0 18px;
 }
 
@@ -651,8 +658,9 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #d1fae5;
-  color: #065f46;
+  background: #FFF0E5;
+  color: #C05A21;
+  border: 1.5px solid #FCD7BD;
   font-weight: 700;
   font-size: 13.5px;
   display: grid;
@@ -730,8 +738,8 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .field-status-chip.verified {
-  background: #d1fae5;
-  color: #065f46;
+  background: #FFF0E5;
+  color: #8C3A0B;
 }
 
 .field-status-chip.pending {
@@ -776,7 +784,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 .progress-pct-value strong {
   font-size: 15px;
   font-weight: 800;
-  color: #0d4b3b;
+  color: #001E32;
   font-family: Manrope, sans-serif;
 }
 
@@ -812,8 +820,8 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .checklist-item.done {
-  background: #f0fdf4;
-  color: #166534;
+  background: #FFF8F3;
+  color: #001E32;
   font-weight: 600;
 }
 
@@ -832,7 +840,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .checklist-item.done .checklist-bullet {
-  background: #10b981;
+  background: #C05A21;
   color: #ffffff;
 }
 
@@ -894,7 +902,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 
 .send-my-inquiry-btn {
   width: 100%;
-  background: #0d4b3b;
+  background: #C05A21;
   color: #ffffff;
   border: 0;
   border-radius: 8px;
@@ -910,7 +918,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .send-my-inquiry-btn:hover:not(:disabled) {
-  background: #08372b;
+  background: #A24816;
   transform: translateY(-1px);
 }
 
@@ -989,7 +997,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .modal-form input:focus, .modal-form select:focus {
-  border-color: #0d4b3b;
+  border-color: #C05A21;
 }
 
 @media (max-width: 960px) {
@@ -1007,8 +1015,8 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 .in-chat-action-card {
   margin: 10px 0 20px;
   padding: 16px 20px;
-  background: #f0fdf9;
-  border: 1px solid #a7f3d0;
+  background: #FFF8F3;
+  border: 1px solid #FCD7BD;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -1018,13 +1026,13 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 
 .in-chat-action-card p {
   margin: 0;
-  font-size: 13px;
-  color: #065f46;
-  font-weight: 500;
+  font-size: 13.5px;
+  color: #001E32;
+  font-weight: 700;
 }
 
 .in-chat-action-btn {
-  background: #0d4b3b;
+  background: #C05A21;
   color: #fff;
   border: 0;
   border-radius: 8px;
@@ -1036,11 +1044,12 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
   gap: 6px;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .in-chat-action-btn:hover {
-  background: #073a2e;
+  background: #A24816;
+  transform: translateY(-1px);
 }
 
 .tracker-search-row {
@@ -1059,11 +1068,11 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .tracker-search-row input:focus {
-  border-color: #0d4b3b;
+  border-color: #C05A21;
 }
 
 .tracker-search-btn {
-  background: #0d4b3b;
+  background: #C05A21;
   color: #ffffff;
   border: 0;
   border-radius: 8px;
@@ -1114,8 +1123,8 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .tracker-badge.qualified {
-  background: #d1fae5;
-  color: #065f46;
+  background: #FFF0E5;
+  color: #8C3A0B;
 }
 
 .tracker-badge.closed {
@@ -1380,8 +1389,8 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .official-fee-chip {
-  background: #e6f4ea;
-  color: #0d4b3b;
+  background: #FFF5EE;
+  color: #C05A21;
   font-weight: 700;
   font-size: 12px;
   padding: 4px 10px;
@@ -1823,7 +1832,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 .msg-suggestions-wrap {
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px dashed rgba(13, 75, 59, 0.22);
+  border-top: 1px dashed rgba(192, 90, 33, 0.25);
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -1832,7 +1841,7 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 .msg-suggestions-label {
   font-size: 11px;
   font-weight: 700;
-  color: #065f46;
+  color: #8C3A0B;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   display: flex;
@@ -1847,9 +1856,9 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .msg-suggestion-pill {
-  background: #f0fdf4;
-  border: 1.5px solid #86efac;
-  color: #166534;
+  background: #FFF8F3;
+  border: 1.5px solid #FCD7BD;
+  color: #8C3A0B;
   font-size: 12px;
   font-weight: 600;
   padding: 6px 13px;
@@ -1861,10 +1870,11 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
 }
 
 .msg-suggestion-pill:hover {
-  background: #dcfce7;
-  border-color: #22c55e;
+  background: #FFF0E5;
+  border-color: #C05A21;
+  color: #C05A21;
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15);
+  box-shadow: 0 2px 6px rgba(192, 90, 33, 0.12);
 }
 
 /* ── Programs & Fees Box Grid Layout ────────────────────────── */
