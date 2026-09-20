@@ -225,42 +225,146 @@ function AnimatedMgmLogo({ onClick }) {
 }
 
 function Header({ onHome, onInquiry, onPrograms, onMyInquiry, onStaff, session, activeNav }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleNavClick = (callback) => {
+    setMobileMenuOpen(false);
+    if (callback) callback();
+  };
+
   return (
-    <header className="site-header">
-      <AnimatedMgmLogo onClick={onHome} />
-      <nav className="site-nav">
-        <button className={activeNav === "home" ? "active" : ""} onClick={onHome}>
-          Home
-        </button>
-        <button className={activeNav === "programs" ? "active" : ""} onClick={onPrograms}>
-          Programs &amp; Fees
-        </button>
-        <button className={activeNav === "inquiry" ? "active" : ""} onClick={onInquiry}>
-          Start Inquiry
-        </button>
-        <button className={activeNav === "myInquiry" ? "active" : ""} onClick={onMyInquiry}>
-          Track Inquiry
-        </button>
-      </nav>
-      <div className="header-right">
-        <a href="tel:+919404494299" className="header-phone-badge" title="Call IICT Admission Helpline">
-          <Phone size={13} />
-          <span>+91 940 449 4299</span>
-        </a>
-        <button className="header-cta-btn" onClick={onInquiry}>
-          Apply Now <ArrowRight size={13} />
-        </button>
-        {session ? (
-          <button className="header-signin-btn logged-in" onClick={onStaff} title="Staff Dashboard">
-            <ShieldCheck size={13} /> Staff
+    <>
+      <header className="site-header">
+        <AnimatedMgmLogo onClick={() => handleNavClick(onHome)} />
+        <nav className="site-nav">
+          <button className={activeNav === "home" ? "active" : ""} onClick={onHome}>
+            Home
           </button>
-        ) : (
-          <button className="header-signin-btn" onClick={onStaff} title="Staff & Teacher Sign In">
-            Sign In
+          <button className={activeNav === "programs" ? "active" : ""} onClick={onPrograms}>
+            Programs &amp; Fees
           </button>
-        )}
-      </div>
-    </header>
+          <button className={activeNav === "inquiry" ? "active" : ""} onClick={onInquiry}>
+            Start Inquiry
+          </button>
+          <button className={activeNav === "myInquiry" ? "active" : ""} onClick={onMyInquiry}>
+            Track Inquiry
+          </button>
+        </nav>
+        <div className="header-right">
+          <a href="tel:+919404494299" className="header-phone-badge" title="Call IICT Admission Helpline">
+            <Phone size={13} />
+            <span>+91 940 449 4299</span>
+          </a>
+          <button className="header-cta-btn" onClick={onInquiry}>
+            Apply Now <ArrowRight size={13} />
+          </button>
+          {session ? (
+            <button className="header-signin-btn logged-in" onClick={onStaff} title="Staff Dashboard">
+              <ShieldCheck size={13} /> Staff
+            </button>
+          ) : (
+            <button className="header-signin-btn" onClick={onStaff} title="Staff & Teacher Sign In">
+              Sign In
+            </button>
+          )}
+          <button
+            type="button"
+            className="mobile-hamburger-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+      </header>
+
+      {/* Responsive Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="mobile-drawer-overlay" onClick={() => setMobileMenuOpen(false)}>
+          <div className="mobile-drawer-content" onClick={(e) => e.stopPropagation()}>
+            <div className="mobile-drawer-header">
+              <div className="drawer-brand-col">
+                <strong>MGM UNIVERSITY</strong>
+                <small>IICT Admissions 2026–27</small>
+              </div>
+              <button
+                type="button"
+                className="drawer-close-btn"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close menu"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <nav className="mobile-drawer-nav">
+              <button
+                type="button"
+                className={`drawer-nav-item ${activeNav === "home" ? "active" : ""}`}
+                onClick={() => handleNavClick(onHome)}
+              >
+                <span>Home</span>
+                <ArrowRight size={15} />
+              </button>
+              <button
+                type="button"
+                className={`drawer-nav-item ${activeNav === "programs" ? "active" : ""}`}
+                onClick={() => handleNavClick(onPrograms)}
+              >
+                <span>Programs &amp; Official Fees</span>
+                <ArrowRight size={15} />
+              </button>
+              <button
+                type="button"
+                className={`drawer-nav-item ${activeNav === "inquiry" ? "active" : ""}`}
+                onClick={() => handleNavClick(onInquiry)}
+              >
+                <span>Start Live Admission Inquiry</span>
+                <ArrowRight size={15} />
+              </button>
+              <button
+                type="button"
+                className={`drawer-nav-item ${activeNav === "myInquiry" ? "active" : ""}`}
+                onClick={() => handleNavClick(onMyInquiry)}
+              >
+                <span>Track My Inquiry</span>
+                <ArrowRight size={15} />
+              </button>
+            </nav>
+
+            <div className="mobile-drawer-actions">
+              <button
+                type="button"
+                className="drawer-apply-cta"
+                onClick={() => handleNavClick(onInquiry)}
+              >
+                Start Inquiry / Apply Now <ArrowRight size={14} />
+              </button>
+
+              <a href="tel:+919404494299" className="drawer-helpline-link">
+                <PhoneCall size={16} />
+                <div>
+                  <strong>+91 940 449 4299</strong>
+                  <small>IICT Admission Helpline (Mon–Sat)</small>
+                </div>
+              </a>
+
+              <div className="drawer-footer-row">
+                {session ? (
+                  <button type="button" className="drawer-staff-btn" onClick={() => handleNavClick(onStaff)}>
+                    <ShieldCheck size={14} /> Open Staff Portal
+                  </button>
+                ) : (
+                  <button type="button" className="drawer-staff-btn" onClick={() => handleNavClick(onStaff)}>
+                    <LogIn size={14} /> Staff / Admin Sign In
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1843,6 +1947,7 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
   };
 
   const chatEndRef = useRef(null);
+  const [mobileTab, setMobileTab] = useState("chat"); // "chat" | "profile"
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1972,8 +2077,26 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
         activeNav="inquiry"
       />
       <main className="counselling-page">
+        {/* Mobile Segmented Toggle */}
+        <div className="counselling-mobile-nav">
+          <button
+            type="button"
+            className={`counselling-mobile-btn ${mobileTab === "chat" ? "active" : ""}`}
+            onClick={() => setMobileTab("chat")}
+          >
+            <MessageCircle size={14} /> Live Counselling Chat
+          </button>
+          <button
+            type="button"
+            className={`counselling-mobile-btn ${mobileTab === "profile" ? "active" : ""}`}
+            onClick={() => setMobileTab("profile")}
+          >
+            <User size={14} /> Admission Profile ({profile.progress}%)
+          </button>
+        </div>
+
         {/* Left Column: Chat Area */}
-        <section className="counselling-chat-col">
+        <section className={`counselling-chat-col ${mobileTab !== "chat" ? "mobile-tab-hidden" : ""}`}>
           <div className="counselling-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
             <div>
               <p className="eyebrow">OFFICIAL IICT ADMISSIONS 2026–27</p>
@@ -2149,7 +2272,7 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
         </section>
 
         {/* Right Column: Counselling Snapshot Sidebar (Hidden Profile in Database) */}
-        <aside className="counselling-sidebar">
+        <aside className={`counselling-sidebar ${mobileTab !== "profile" ? "mobile-tab-hidden" : ""}`}>
           <div className="sidebar-top">
             <span className="sidebar-eyebrow">COUNSELLING SNAPSHOT</span>
             <span className="sidebar-live-pill">
