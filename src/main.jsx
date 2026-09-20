@@ -30,7 +30,15 @@ import {
   Mail,
   MapPin,
   HelpCircle,
-  Award
+  Award,
+  Download,
+  FileSpreadsheet,
+  TrendingUp,
+  UserCheck,
+  Filter,
+  ExternalLink,
+  Save,
+  Phone
 } from "lucide-react";
 import { supabase, supabaseConfigured } from "./lib/supabase";
 import "./styles.css";
@@ -1479,9 +1487,20 @@ function Dashboard({ session, onExit }) {
   const [error, setError] = useState("");
   const [newTeacherEmail, setNewTeacherEmail] = useState("");
   const [newTeacherName, setNewTeacherName] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [granting, setGranting] = useState(false);
   const [grantMsg, setGrantMsg] = useState("");
+
+  // Filters & Search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [programFilter, setProgramFilter] = useState("all");
+  const [scoreFilter, setScoreFilter] = useState("all");
+  const [assignedFilter, setAssignedFilter] = useState("all");
+
+  // Interaction Modals & Notes
+  const [templateModalLead, setTemplateModalLead] = useState(null);
+  const [leadNotesState, setLeadNotesState] = useState({});
+  const [savingNotesId, setSavingNotesId] = useState(null);
 
   const userEmail = session?.user?.email || "";
 
@@ -1512,7 +1531,15 @@ function Dashboard({ session, onExit }) {
       .order("created_at", { ascending: false })
       .then(({ data, error: queryError }) => {
         if (queryError) setError(queryError.message);
-        else setLeads(data || []);
+        else {
+          setLeads(data || []);
+          // Pre-populate notes map
+          const initialNotes = {};
+          (data || []).forEach((l) => {
+            if (l.counselor_notes) initialNotes[l.id] = l.counselor_notes;
+          });
+          setLeadNotesState(initialNotes);
+        }
       });
 
     // Load staff profiles list (protected by RLS)
@@ -1537,6 +1564,41 @@ function Dashboard({ session, onExit }) {
     } else {
       setLeads((prev) =>
         prev.map((l) => (l.id === leadId ? { ...l, status: nextStatus, counselor_notes: notes } : l))
+      );
+    }
+  };
+
+  const updateLeadAssignment = async (leadId, teacherUserId) => {
+    if (!supabase) return;
+    const { error: assignError } = await supabase
+      .from("inquiries")
+      .update({ assigned_to: teacherUserId || null, updated_at: new Date().toISOString() })
+      .eq("id", leadId);
+
+    if (assignError) {
+      setError(assignError.message);
+    } else {
+      setLeads((prev) =>
+        prev.map((l) => (l.id === leadId ? { ...l, assigned_to: teacherUserId || null } : l))
+      );
+    }
+  };
+
+  const saveLeadNotes = async (leadId) => {
+    if (!supabase) return;
+    setSavingNotesId(leadId);
+    const noteText = leadNotesState[leadId] || "";
+    const { error: noteError } = await supabase
+      .from("inquiries")
+      .update({ counselor_notes: noteText, updated_at: new Date().toISOString() })
+      .eq("id", leadId);
+
+    setSavingNotesId(null);
+    if (noteError) {
+      setError(noteError.message);
+    } else {
+      setLeads((prev) =>
+        prev.map((l) => (l.id === leadId ? { ...l, counselor_notes: noteText } : l))
       );
     }
   };
@@ -1573,10 +1635,185 @@ function Dashboard({ session, onExit }) {
     setGranting(false);
   };
 
-  const filteredLeads = leads.filter((l) => {
-    if (statusFilter === "all") return true;
-    return l.status === statusFilter;
+  // ── KPI Analytics Computations ─────────────────────────────
+  const totalLeadsCount = leads.length;
+  const newLeadsCount = leads.filter((l) => !l.status || l.status === "new").length;
+  const qualifiedLeadsCount = leads.filter((l) => l.status === "qualified").length;
+
+  // Average 12th PCM %
+  const pcmScores = leads
+    .map((l) => parseFloat(l.marks_12th))
+    .filter((n) => !isNaN(n) && n > 0);
+  const avgPcm = pcmScores.length > 0
+    ? (pcmScores.reduce((a, b) => a + b, 0) / pcmScores.length).toFixed(1)
+    : "—";
+
+  // Top Program Demand
+  const progCounts = {};
+  leads.forEach((l) => {
+    if (l.program_interest) {
+      progCounts[l.program_interest] = (progCounts[l.program_interest] || 0) + 1;
+    }
   });
+  let topProgram = "—";
+  let topProgCount = 0;
+  Object.entries(progCounts).forEach(([prog, count]) => {
+    if (count > topProgCount) {
+      topProgram = prog;
+      topProgCount = count;
+    }
+  });
+  const topProgShare = totalLeadsCount > 0 && topProgCount > 0
+    ? Math.round((topProgCount / totalLeadsCount) * 100)
+    : 0;
+
+  // ── Multi-Filter and Search Logic ──────────────────────────
+  const distinctPrograms = Array.from(
+    new Set(leads.map((l) => l.program_interest).filter(Boolean))
+  );
+
+  const filteredLeads = leads.filter((lead) => {
+    // Text search across multiple fields
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchName = lead.student_name?.toLowerCase().includes(q);
+      const matchRef = lead.reference_code?.toLowerCase().includes(q);
+      const matchPhone = lead.phone?.toLowerCase().includes(q);
+      const matchEmail = lead.email?.toLowerCase().includes(q);
+      const matchLoc = lead.location?.toLowerCase().includes(q);
+      const matchProg = lead.program_interest?.toLowerCase().includes(q);
+      if (!matchName && !matchRef && !matchPhone && !matchEmail && !matchLoc && !matchProg) {
+        return false;
+      }
+    }
+
+    // Status filter
+    if (statusFilter !== "all") {
+      const actualStatus = lead.status || "new";
+      if (actualStatus !== statusFilter) return false;
+    }
+
+    // Program filter
+    if (programFilter !== "all") {
+      if (lead.program_interest !== programFilter) return false;
+    }
+
+    // Score filter
+    if (scoreFilter !== "all") {
+      const score = parseFloat(lead.marks_12th) || 0;
+      if (scoreFilter === "above85" && score < 85) return false;
+      if (scoreFilter === "70to85" && (score < 70 || score >= 85)) return false;
+      if (scoreFilter === "below70" && (score >= 70 || score <= 0)) return false;
+    }
+
+    // Assignment filter
+    if (assignedFilter !== "all") {
+      if (assignedFilter === "me" && lead.assigned_to !== session?.user?.id) return false;
+      if (assignedFilter === "unassigned" && lead.assigned_to) return false;
+    }
+
+    return true;
+  });
+
+  // ── One-Click CSV Export ──────────────────────────────────
+  const exportToCSV = () => {
+    if (!filteredLeads || filteredLeads.length === 0) {
+      alert("No inquiry records to export for the active filters.");
+      return;
+    }
+
+    const headers = [
+      "Reference Code",
+      "Student Name",
+      "Phone",
+      "Email",
+      "Program Interest",
+      "12th PCM Marks (%)",
+      "10th Marks (%)",
+      "Entrance Exam",
+      "Location",
+      "Status",
+      "Assigned Faculty",
+      "Counselor Notes",
+      "Inquiry Transcript / Questions",
+      "Created At"
+    ];
+
+    const escapeCsv = (str) => {
+      if (str === null || str === undefined) return '""';
+      const val = String(str).replace(/"/g, '""');
+      return `"${val}"`;
+    };
+
+    const rows = filteredLeads.map((lead) => {
+      const assignedStaff =
+        staffList.find((s) => s.user_id === lead.assigned_to)?.display_name || "Unassigned";
+      return [
+        escapeCsv(lead.reference_code || ""),
+        escapeCsv(lead.student_name || ""),
+        escapeCsv(lead.phone || ""),
+        escapeCsv(lead.email || ""),
+        escapeCsv(lead.program_interest || ""),
+        escapeCsv(lead.marks_12th || ""),
+        escapeCsv(lead.marks_10th || ""),
+        escapeCsv(lead.entrance_exam || ""),
+        escapeCsv(lead.location || ""),
+        escapeCsv(lead.status || "new"),
+        escapeCsv(assignedStaff),
+        escapeCsv(lead.counselor_notes || ""),
+        escapeCsv(lead.question || ""),
+        escapeCsv(lead.created_at ? new Date(lead.created_at).toLocaleString() : "")
+      ].join(",");
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("href", url);
+    link.setAttribute("download", `IICT_Admissions_Inquiries_${dateStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // ── WhatsApp Templates Generator ──────────────────────────
+  const getWhatsAppTemplates = (lead) => {
+    if (!lead) return [];
+    const name = lead.student_name || "Candidate";
+    const prog = lead.program_interest || "Engineering";
+    const ref = lead.reference_code || "IICT-2026";
+    const score = lead.marks_12th ? `${lead.marks_12th}%` : "academic score";
+
+    return [
+      {
+        id: "verification",
+        title: "Eligibility & Document Verification",
+        tag: "High Priority",
+        text: `Dear ${name}, greetings from MGM University IICT Admissions Committee! Regarding your inquiry for ${prog} (Ref: ${ref}), our academic board has reviewed your details. Please share your 10th & 12th scorecards for expedited eligibility & document verification.`
+      },
+      {
+        id: "scholarship",
+        title: "Merit Scholarship Offer (Up to 100%)",
+        tag: "Scholarship",
+        text: `Congratulations ${name}! With your academic record (${score}), you qualify to apply for the MGM University Merit Scholarship offering up to 100% tuition waiver for ${prog}. Would you like our senior counselor to book an online evaluation slot for you?`
+      },
+      {
+        id: "reservation",
+        title: "Direct Seat Reservation Follow-up",
+        tag: "Seat Allocation",
+        text: `Hello ${name}, admissions for ${prog} (Academic Year 2026–27) at MGMU IICT are filling up rapidly under CAP & Institutional quota. You can secure your provisional seat reservation today using Reference: ${ref}. Let us know if you wish to confirm!`
+      },
+      {
+        id: "campus_tour",
+        title: "Campus Visit & Lab Tour Invitation",
+        tag: "Invitation",
+        text: `Dear ${name} & Parents, you are cordially invited to visit MGM University IICT campus in Chhatrapati Sambhajinagar. Tour our cutting-edge AI & Cloud Computing Labs, meet faculty mentors, and complete on-the-spot provisional admission.`
+      }
+    ];
+  };
 
   if (userRole === null) {
     return (
@@ -1664,111 +1901,442 @@ function Dashboard({ session, onExit }) {
       {/* TAB 1: Inquiries & Hidden Profiles */}
       {activeTab === "inquiries" && (
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              <span style={{ fontSize: "12px", color: "#6b7280" }}>Filter Status:</span>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12.5px" }}
-              >
-                <option value="all">All Inquiries</option>
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="qualified">Qualified</option>
-                <option value="closed">Closed</option>
-              </select>
+          {/* KPI Analytics Summary Cards */}
+          <section className="admin-kpi-grid">
+            <div className="admin-kpi-card">
+              <div className="kpi-icon-wrap kpi-icon-blue">
+                <UsersRound size={22} />
+              </div>
+              <div className="kpi-content">
+                <span className="kpi-val">{totalLeadsCount}</span>
+                <span className="kpi-lbl">Total Inquiries</span>
+                <span className="kpi-sub">Overall student interest</span>
+              </div>
             </div>
-            <span style={{ fontSize: "12px", color: "#6b7280" }}>
-              Showing {filteredLeads.length} student profiles (Protected under RLS)
-            </span>
+
+            <div className="admin-kpi-card">
+              <div className="kpi-icon-wrap kpi-icon-amber">
+                <Clock size={22} />
+              </div>
+              <div className="kpi-content">
+                <span className="kpi-val">{newLeadsCount}</span>
+                <span className="kpi-lbl">New / Uncontacted</span>
+                <span className="kpi-sub">Require immediate outreach</span>
+              </div>
+            </div>
+
+            <div className="admin-kpi-card">
+              <div className="kpi-icon-wrap kpi-icon-green">
+                <CheckCircle2 size={22} />
+              </div>
+              <div className="kpi-content">
+                <span className="kpi-val">{qualifiedLeadsCount}</span>
+                <span className="kpi-lbl">Qualified Leads</span>
+                <span className="kpi-sub">Ready for seat reservation</span>
+              </div>
+            </div>
+
+            <div className="admin-kpi-card">
+              <div className="kpi-icon-wrap kpi-icon-purple">
+                <TrendingUp size={22} />
+              </div>
+              <div className="kpi-content">
+                <span className="kpi-val" style={{ fontSize: "16px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", maxWidth: "160px" }} title={topProgram}>
+                  {topProgram.replace("B.Tech in ", "")}
+                </span>
+                <span className="kpi-lbl">Top Demand Program</span>
+                <span className="kpi-sub">{topProgShare}% of inquiry pool</span>
+              </div>
+            </div>
+
+            <div className="admin-kpi-card">
+              <div className="kpi-icon-wrap kpi-icon-teal">
+                <Award size={22} />
+              </div>
+              <div className="kpi-content">
+                <span className="kpi-val">{avgPcm !== "—" ? `${avgPcm}%` : "—"}</span>
+                <span className="kpi-lbl">Avg 12th PCM</span>
+                <span className="kpi-sub">Academic benchmark</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Admin Toolbar: Search, Multi-Filters, Export */}
+          <div className="admin-toolbar-card">
+            <div className="admin-toolbar-row">
+              <div className="admin-search-box">
+                <Search size={16} />
+                <input
+                  type="text"
+                  placeholder="Search by student name, ref code, phone, email, city..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <button
+                type="button"
+                className="export-csv-btn"
+                onClick={exportToCSV}
+                title="Download current inquiries filtered list as Excel/CSV"
+              >
+                <Download size={15} />
+                Export CSV ({filteredLeads.length})
+              </button>
+            </div>
+
+            <div className="admin-toolbar-row" style={{ borderTop: "1px solid #f3f4f6", paddingTop: "12px" }}>
+              <div className="admin-filters-group">
+                <span style={{ fontSize: "12px", color: "#6b7280", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <Filter size={13} /> Filters:
+                </span>
+
+                {/* Status Filter */}
+                <select
+                  className="admin-filter-select"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="new">New</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="qualified">Qualified</option>
+                  <option value="closed">Closed</option>
+                </select>
+
+                {/* Program Filter */}
+                <select
+                  className="admin-filter-select"
+                  value={programFilter}
+                  onChange={(e) => setProgramFilter(e.target.value)}
+                >
+                  <option value="all">All Programs</option>
+                  {distinctPrograms.map((prog) => (
+                    <option key={prog} value={prog}>
+                      {prog}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Score Bracket Filter */}
+                <select
+                  className="admin-filter-select"
+                  value={scoreFilter}
+                  onChange={(e) => setScoreFilter(e.target.value)}
+                >
+                  <option value="all">All Academic Marks</option>
+                  <option value="above85">PCM &gt; 85% (Merit)</option>
+                  <option value="70to85">PCM 70% – 85%</option>
+                  <option value="below70">PCM &lt; 70%</option>
+                </select>
+
+                {/* Faculty Assignment Filter */}
+                <select
+                  className="admin-filter-select"
+                  value={assignedFilter}
+                  onChange={(e) => setAssignedFilter(e.target.value)}
+                >
+                  <option value="all">All Assignments</option>
+                  <option value="me">Assigned to Me</option>
+                  <option value="unassigned">Unassigned Inquiries</option>
+                </select>
+
+                {(searchQuery || statusFilter !== "all" || programFilter !== "all" || scoreFilter !== "all" || assignedFilter !== "all") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setStatusFilter("all");
+                      setProgramFilter("all");
+                      setScoreFilter("all");
+                      setAssignedFilter("all");
+                    }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#dc2626",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                      padding: "4px 8px"
+                    }}
+                  >
+                    Reset Filters
+                  </button>
+                )}
+              </div>
+
+              <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                Showing <strong>{filteredLeads.length}</strong> of {leads.length} student profiles
+              </span>
+            </div>
           </div>
 
+          {/* Inquiries List */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {filteredLeads.length > 0 ? (
-              filteredLeads.map((lead) => (
-                <article key={lead.id} className="lead-card-expanded">
-                  <div className="lead-card-top">
-                    <div className="lead-student-meta">
-                      <strong>{lead.student_name}</strong>
-                      <small>
-                        Ref: {lead.reference_code} · {lead.program_interest} · {new Date(lead.created_at).toLocaleDateString()}
-                      </small>
-                    </div>
-                    <span className={`tracker-badge ${lead.status || "new"}`}>
-                      {lead.status === "new" ? "New Lead" : lead.status}
-                    </span>
-                  </div>
+              filteredLeads.map((lead) => {
+                const assignedTeacher = staffList.find((s) => s.user_id === lead.assigned_to);
+                const isAssignedToMe = lead.assigned_to === session?.user?.id;
+                const cleanPhone = (lead.phone || "").replace(/\D/g, "");
 
-                  {/* Student Hidden Profile Details */}
-                  <div className="lead-profile-grid">
-                    <div className="profile-stat-box">
-                      <span>Phone / WhatsApp</span>
-                      <strong><a href={`tel:${lead.phone}`} style={{ color: "inherit", textDecoration: "none" }}>{lead.phone}</a></strong>
+                return (
+                  <article key={lead.id} className="lead-card-expanded">
+                    <div className="lead-card-top">
+                      <div className="lead-student-meta">
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <strong>{lead.student_name}</strong>
+                          {isAssignedToMe && (
+                            <span style={{ fontSize: "11px", background: "#dbeafe", color: "#1e40af", fontWeight: 700, padding: "2px 8px", borderRadius: "4px" }}>
+                              Assigned to You
+                            </span>
+                          )}
+                        </div>
+                        <small>
+                          Ref: {lead.reference_code} · {lead.program_interest} · {new Date(lead.created_at).toLocaleDateString()}
+                        </small>
+                      </div>
+                      <span className={`tracker-badge ${lead.status || "new"}`}>
+                        {lead.status === "new" ? "New Lead" : lead.status}
+                      </span>
                     </div>
-                    <div className="profile-stat-box">
-                      <span>Email</span>
-                      <strong><a href={`mailto:${lead.email}`} style={{ color: "inherit", textDecoration: "none" }}>{lead.email}</a></strong>
-                    </div>
-                    <div className="profile-stat-box">
-                      <span>Academic Marks</span>
-                      <strong>12th: {lead.marks_12th ? `${lead.marks_12th}%` : "—"} | 10th: {lead.marks_10th ? `${lead.marks_10th}%` : "—"}</strong>
-                    </div>
-                    <div className="profile-stat-box">
-                      <span>Entrance Exam</span>
-                      <strong>{lead.entrance_exam || "MHT-CET / MGMU-CET"}</strong>
-                    </div>
-                    <div className="profile-stat-box">
-                      <span>Location</span>
-                      <strong>{lead.location || "Maharashtra"}</strong>
-                    </div>
-                  </div>
 
-                  {lead.question && (
-                    <div className="lead-question-box">
-                      <strong>Counselling Transcript & Questions:</strong>
-                      <div style={{ marginTop: "4px" }}>{lead.question}</div>
+                    {/* Student Hidden Profile Details */}
+                    <div className="lead-profile-grid">
+                      <div className="profile-stat-box">
+                        <span>Phone / WhatsApp</span>
+                        <strong>
+                          <a href={`tel:${lead.phone}`} style={{ color: "inherit", textDecoration: "none" }}>
+                            {lead.phone}
+                          </a>
+                        </strong>
+                      </div>
+                      <div className="profile-stat-box">
+                        <span>Email</span>
+                        <strong>
+                          <a href={`mailto:${lead.email}`} style={{ color: "inherit", textDecoration: "none" }}>
+                            {lead.email}
+                          </a>
+                        </strong>
+                      </div>
+                      <div className="profile-stat-box">
+                        <span>Academic Marks</span>
+                        <strong>12th: {lead.marks_12th ? `${lead.marks_12th}%` : "—"} | 10th: {lead.marks_10th ? `${lead.marks_10th}%` : "—"}</strong>
+                      </div>
+                      <div className="profile-stat-box">
+                        <span>Entrance Exam</span>
+                        <strong>{lead.entrance_exam || "MHT-CET / MGMU-CET"}</strong>
+                      </div>
+                      <div className="profile-stat-box">
+                        <span>Location</span>
+                        <strong>{lead.location || "Maharashtra"}</strong>
+                      </div>
                     </div>
-                  )}
 
-                  <div className="lead-actions-bar">
-                    <div className="status-select-wrap">
-                      <span>Update Status:</span>
-                      <select
-                        value={lead.status}
-                        onChange={(e) => updateLeadStatus(lead.id, e.target.value, lead.counselor_notes)}
+                    {/* Faculty Assignment Bar */}
+                    <div className="lead-faculty-row">
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <UserCheck size={14} color="#0f766e" />
+                        <span>Assigned Counsellor:</span>
+                        <select
+                          className="lead-faculty-select"
+                          value={lead.assigned_to || ""}
+                          onChange={(e) => updateLeadAssignment(lead.id, e.target.value)}
+                        >
+                          <option value="">-- Unassigned (Admissions Pool) --</option>
+                          {staffList.map((st) => (
+                            <option key={st.user_id} value={st.user_id}>
+                              {st.display_name} {st.user_id === session?.user?.id ? "(You)" : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {assignedTeacher && (
+                        <span style={{ fontSize: "11px", color: "#0369a1" }}>
+                          Managed by {assignedTeacher.display_name}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Question / Chat Transcript */}
+                    {lead.question && (
+                      <div className="lead-question-box">
+                        <strong>Counselling Transcript & Questions:</strong>
+                        <div style={{ marginTop: "4px" }}>{lead.question}</div>
+                      </div>
+                    )}
+
+                    {/* Inline Counsellor Notes Area */}
+                    <div className="lead-notes-area">
+                      <div className="lead-notes-header">
+                        <span>Internal Counsellor Notes</span>
+                        {savingNotesId === lead.id && <small style={{ color: "#d97706" }}>Saving...</small>}
+                      </div>
+                      <textarea
+                        className="lead-notes-input"
+                        placeholder="Log calling feedback, verified documents, candidate scholarship eligibility or discussion notes..."
+                        value={leadNotesState[lead.id] !== undefined ? leadNotesState[lead.id] : (lead.counselor_notes || "")}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setLeadNotesState((prev) => ({ ...prev, [lead.id]: val }));
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="save-notes-btn"
+                        onClick={() => saveLeadNotes(lead.id)}
+                        disabled={savingNotesId === lead.id}
                       >
-                        <option value="new">New</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="qualified">Qualified</option>
-                        <option value="closed">Closed</option>
-                      </select>
+                        <Save size={12} /> Save Note
+                      </button>
                     </div>
 
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <a
-                        href={`https://wa.me/91${lead.phone.replace(/\D/g, "")}?text=Hello%20${encodeURIComponent(lead.student_name)},%20this%20is%20MGM%20University%20IICT%20Admissions%20Committee%20following%20up%20on%20your%20inquiry%20for%20${encodeURIComponent(lead.program_interest)}.`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="secondary-button"
-                        style={{ padding: "6px 12px", fontSize: "11px" }}
-                      >
-                        WhatsApp Student
-                      </a>
+                    {/* Lead Actions Bar */}
+                    <div className="lead-actions-bar">
+                      <div className="status-select-wrap">
+                        <span>Update Status:</span>
+                        <select
+                          value={lead.status || "new"}
+                          onChange={(e) => updateLeadStatus(lead.id, e.target.value, leadNotesState[lead.id] || lead.counselor_notes)}
+                        >
+                          <option value="new">New</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="qualified">Qualified</option>
+                          <option value="closed">Closed</option>
+                        </select>
+                      </div>
+
+                      <div className="lead-quick-contact">
+                        {/* Direct Call */}
+                        {lead.phone && (
+                          <a href={`tel:${cleanPhone}`} className="contact-chip-btn contact-call" title="Direct Phone Call">
+                            <Phone size={13} /> Call
+                          </a>
+                        )}
+
+                        {/* Direct Email */}
+                        {lead.email && (
+                          <a
+                            href={`mailto:${lead.email}?subject=MGM%20University%20IICT%20Admissions%20-%20Reference%20${encodeURIComponent(lead.reference_code || "")}&body=Dear%20${encodeURIComponent(lead.student_name)},%0A%0AGreetings%20from%20MGM%20University%20IICT%20Admissions%20Committee.`}
+                            className="contact-chip-btn contact-mail"
+                            title="Direct Email"
+                          >
+                            <Mail size={13} /> Email
+                          </a>
+                        )}
+
+                        {/* Smart WhatsApp Templates Button */}
+                        <button
+                          type="button"
+                          className="contact-chip-btn contact-wa-smart"
+                          onClick={() => setTemplateModalLead(lead)}
+                        >
+                          <MessageCircle size={13} /> Smart WhatsApp
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))
+                  </article>
+                );
+              })
             ) : (
               <div className="dashboard-empty">
                 <LockKeyhole size={24} />
-                <h2>No inquiries found</h2>
-                <p>New inquiries submitted by students will securely populate here.</p>
+                <h2>No inquiries match the current search or filters</h2>
+                <p>Try resetting the search bar or changing status/program filters.</p>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  style={{ marginTop: "12px" }}
+                  onClick={() => {
+                    setSearchQuery("");
+                    setStatusFilter("all");
+                    setProgramFilter("all");
+                    setScoreFilter("all");
+                    setAssignedFilter("all");
+                  }}
+                >
+                  Reset All Filters
+                </button>
               </div>
             )}
           </div>
         </div>
       )}
+
+      {/* Smart WhatsApp Templates Modal */}
+      {templateModalLead && (
+        <div className="wa-modal-overlay" onClick={() => setTemplateModalLead(null)}>
+          <div className="wa-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="wa-modal-header">
+              <h3>
+                <MessageCircle size={18} color="#25d366" />
+                Smart WhatsApp Communications
+              </h3>
+              <button
+                type="button"
+                onClick={() => setTemplateModalLead(null)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280" }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="wa-modal-body">
+              <div className="wa-candidate-summary">
+                <div>
+                  <strong>Student:</strong> {templateModalLead.student_name}
+                </div>
+                <div>
+                  <strong>Phone:</strong> {templateModalLead.phone}
+                </div>
+                <div>
+                  <strong>Program:</strong> {templateModalLead.program_interest}
+                </div>
+                <div>
+                  <strong>Ref Code:</strong> {templateModalLead.reference_code}
+                </div>
+              </div>
+
+              <p style={{ fontSize: "12.5px", color: "#4b5563", margin: 0 }}>
+                Select an authoritative counselling template. Clicking will instantly launch WhatsApp with personalized candidate details pre-filled:
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {getWhatsAppTemplates(templateModalLead).map((tpl) => {
+                  const phoneNum = (templateModalLead.phone || "").replace(/\D/g, "");
+                  const waUrl = `https://wa.me/91${phoneNum}?text=${encodeURIComponent(tpl.text)}`;
+
+                  return (
+                    <div key={tpl.id} className="wa-template-card">
+                      <div className="wa-template-title-bar">
+                        <span className="wa-template-title">{tpl.title}</span>
+                        <span className="wa-template-tag">{tpl.tag}</span>
+                      </div>
+                      <div className="wa-template-preview">{tpl.text}</div>
+                      <a
+                        href={waUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="wa-send-btn"
+                        onClick={() => {
+                          // Auto update lead status to contacted if new
+                          if (!templateModalLead.status || templateModalLead.status === "new") {
+                            updateLeadStatus(templateModalLead.id, "contacted", templateModalLead.counselor_notes);
+                          }
+                          setTemplateModalLead(null);
+                        }}
+                      >
+                        <MessageCircle size={14} /> Send via WhatsApp
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* TAB 2: Teacher Access Management (Super Admin Exclusive) */}
       {activeTab === "teachers" && userRole === "super_admin" && (
