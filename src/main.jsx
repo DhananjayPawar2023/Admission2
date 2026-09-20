@@ -598,13 +598,16 @@ function Compare({ programs, facts, onBack, onInquiry, onMyInquiry, onStaff, ses
 
 // ── AI Counsellor Chatbot Engine (Authoritative Knowledge Base) ───────────
 const quickChips = [
-  "Explore Programs",
-  "Find the Right Course",
+  "AI & ML vs CSE (AI)",
+  "Data Science vs AI",
+  "Low CET Score Options",
   "Check Fees (2026–27)",
-  "Eligibility & Entrance",
-  "Scholarships",
-  "Admission Dates",
-  "Talk to Admissions"
+  "Scholarships (Up to 100%)",
+  "Average & Highest Placements",
+  "Hostel & Campus Facilities",
+  "Is Degree Valid for UPSC & Abroad?",
+  "Can Non-CS Students Learn Coding?",
+  "Admission Dates & Documents"
 ];
 
 function calculateProgress(p) {
@@ -631,7 +634,7 @@ function parseProfileUpdates(text, currentProfile) {
     }
   } else if (!currentProfile.name && text.trim().length >= 2 && text.trim().length <= 30) {
     const words = text.trim().split(/\s+/);
-    const keywords = ["fee", "fees", "course", "courses", "ai", "cse", "it", "ds", "scholarship", "cutoff", "eligibility", "when", "how", "what", "where", "hi", "hello", "hey", "yes", "no", "ok", "sure", "help"];
+    const keywords = ["fee", "fees", "course", "courses", "ai", "cse", "it", "ds", "scholarship", "cutoff", "eligibility", "when", "how", "what", "where", "hi", "hello", "hey", "yes", "no", "ok", "sure", "help", "compare", "difference", "placement", "hostel"];
     if (words.length >= 1 && words.length <= 3 && words.every((w) => /^[A-Za-z]+$/.test(w)) && !words.some((w) => keywords.includes(w.toLowerCase()))) {
       updates.name = words.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
     }
@@ -724,81 +727,697 @@ function generateCounsellorReply(text, p) {
 
   // Check if student wants to confirm or submit inquiry directly
   if (
-    (q === "yes" || q === "submit" || q === "confirm" || q === "apply" || q.includes("submit inquiry") || q.includes("submit my inquiry") || q.includes("please submit") || q.includes("confirm inquiry")) &&
+    (q === "yes" || q === "submit" || q === "confirm" || q === "apply" || q.includes("submit inquiry") || q.includes("submit my inquiry") || q.includes("please submit") || q.includes("confirm inquiry") || q.includes("confirm admission")) &&
     p.name && (p.phone || p.email)
   ) {
     return {
-      text: `Excellent, ${p.name}! I am submitting your official priority admission inquiry to the IICT admissions desk right now...`,
-      actionType: "submit_now"
+      text: `Excellent, ${p.name}! I am submitting your official priority admission inquiry to the IICT Admissions Committee right now...`,
+      actionType: "submit_now",
+      suggestions: []
     };
   }
 
   let answer = "";
+  let suggestions = [];
 
-  // 1. Fee queries
-  if (q.includes("fee") || q.includes("cost") || q.includes("tuition") || q.includes("check fees") || q.includes("expense") || q.includes("charges")) {
-    answer = "Here is the official 2026–27 Annual Tuition Fee schedule for MGM University IICT:\n\n• B.Tech AI & ML: ₹1,50,000 / year (4 Years)\n• B.Tech Data Science: ₹1,50,000 / year (4 Years)\n• B.Tech Information Technology: ₹1,75,000 / year (4 Years)\n• B.Tech CSE (Artificial Intelligence): ₹2,04,500 / year (4 Years)\n• B.Tech Lateral Entry (DSY): ₹1,50,000 / year (3 Years)\n• M.Tech (AI & ML / Data Science): ₹1,50,000 / year (2 Years)\n• Diploma in Cyber Security: ₹1,00,000 / year (1 Year)\n\nAdditional official charges: Application & MGMU-CET (₹2,000), Refundable Caution Money (₹5,000), and University Eligibility fee (₹5,000). Up to 100% tuition waiver is available under our 150+ merit scholarships!";
+  // ─────────────────────────────────────────────────────────────
+  // 1. Comparison: AI & ML vs CSE (Artificial Intelligence)
+  // ─────────────────────────────────────────────────────────────
+  if (
+    (q.includes("ai") && (q.includes("cse") || q.includes("computer science"))) ||
+    q.includes("ai vs cse") ||
+    q.includes("cse vs ai") ||
+    q.includes("difference between ai and cse")
+  ) {
+    answer = `🎯 **Detailed Comparison: B.Tech AI & ML vs B.Tech CSE (AI)**
+
+Both are premier 4-year engineering programs at IICT, but they cater to distinct technical aspirations:
+
+• **B.Tech CSE (Artificial Intelligence)** (Annual Fee: ₹2,04,500/yr):
+  - **Curriculum**: Comprehensive classical computer science foundation (Operating Systems, Compiler Design, Database Architecture, Computer Networks, Algorithms) combined with advanced AI & ML specialization.
+  - **Career Path**: Universal eligibility for all Software Development Engineer (SDE) roles at global tech giants (Google, Microsoft, Amazon, Oracle), as well as AI engineering roles.
+  - **Best For**: Students who want maximum versatility across all software domains with an added AI advantage.
+
+• **B.Tech Artificial Intelligence & Machine Learning** (Annual Fee: ₹1,50,000/yr):
+  - **Curriculum**: Direct immersion into intelligent systems from Semester 3 onwards: Deep Neural Networks, Natural Language Processing, Computer Vision, Robotics, Generative AI & Large Language Models (LLMs).
+  - **Career Path**: Pure-play AI Engineer, ML Research Scientist, Computer Vision Specialist, and Autonomous Systems Developer.
+  - **Cost Advantage**: ₹1.50 Lakhs/yr (saving over ₹2.18 Lakhs across 4 years compared to CSE, with identical eligibility for top IT recruiters).
+
+💡 **Summary**: If you love deep generative models and high-growth AI startups, choose **AI & ML**. If you want a broad classical CS degree with AI specialization, choose **CSE (AI)**.`;
+    suggestions = [
+      "Check B.Tech AI Fees",
+      "Placements for AI vs CSE",
+      "Low CET Score Options",
+      "Check Eligibility Criteria"
+    ];
   }
-  // 2. Program comparison or course choice
-  else if (q.includes("which course") || q.includes("difference") || q.includes("compare") || (q.includes("ai") && (q.includes("cse") || q.includes("ds") || q.includes("it")))) {
-    answer = "Comparing IICT's premier engineering pathways:\n\n1. B.Tech AI & ML (₹1.50L/yr): Focused on intelligent systems, neural networks, robotics, computer vision, and generative AI models.\n2. B.Tech CSE (AI) (₹2.045L/yr): Rigorous classic computer science engineering (compilers, operating systems, algorithms) combined with an applied AI specialization. Excellent for global tier-1 tech hiring.\n3. B.Tech Data Science (₹1.50L/yr): Emphasizes big-data engineering, statistical machine learning, business intelligence, and real-time data streaming.\n4. B.Tech IT (₹1.75L/yr): Focuses on cloud computing, devops, cybersecurity, and enterprise software architecture.";
+
+  // ─────────────────────────────────────────────────────────────
+  // 2. Comparison: AI & ML vs Data Science
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    (q.includes("data science") || q.includes("datascience") || q.includes("ds")) &&
+    (q.includes("ai") || q.includes("difference") || q.includes("compare") || q.includes("vs"))
+  ) {
+    answer = `📊 **Comparison: B.Tech AI & ML vs B.Tech Data Science**
+
+Both programs share the same affordable annual tuition fee of **₹1,50,000 / year**, but focus on different core technologies:
+
+• **B.Tech Data Science**:
+  - **Core Focus**: Big Data Engineering, Statistical Analytics, Predictive Modeling, Business Intelligence, and Data Visualization.
+  - **Key Technologies**: Apache Spark, Hadoop, SQL/NoSQL, Tableau, PowerBI, Python/R, Predictive ML.
+  - **Top Industries**: Investment Banking, FinTech, E-commerce, Healthcare Analytics, Management Consulting (Morgan Stanley, Goldman Sachs, Deloitte, Amazon).
+
+• **B.Tech AI & ML**:
+  - **Core Focus**: Autonomous intelligent agents that sense, perceive, and act independently.
+  - **Key Technologies**: PyTorch, TensorFlow, OpenCV, Reinforcement Learning, Transformers, LLMs, Robotics.
+  - **Top Industries**: Autonomous Vehicles, Robotics, Generative AI, Drone Intelligence, Medical Imaging.
+
+💡 **Verdict**: If you enjoy business insights, financial data, and predictive forecasting, choose **Data Science**. If you want to build intelligent robots, voice assistants, and self-learning algorithms, choose **AI & ML**!`;
+    suggestions = [
+      "Data Science Placements",
+      "Check Fees (2026–27)",
+      "Compare AI vs CSE",
+      "Reserve Seat in Data Science"
+    ];
   }
-  // 3. Eligibility & Entrance Exams
-  else if (q.includes("eligib") || q.includes("criteria") || q.includes("entrance") || q.includes("cet") || q.includes("jee") || q.includes("cutoff") || q.includes("cut off") || q.includes("marks") || q.includes("percent")) {
-    answer = "Official 2026–27 Eligibility Criteria for IICT Admissions:\n\n• Academic Requirement: Passed 10+2 (HSC) with Physics & Mathematics as compulsory subjects, plus Chemistry/CS/IT/Biology with at least 45% aggregate (40% for Maharashtra reserved categories: SC/ST/OBC/EWS/PwD).\n• Accepted Entrance Exams: MHT-CET 2026, JEE (Main) 2026, or MGMU-CET 2026.\n• Lateral Entry (DSY): 3-year Engineering Diploma with minimum 45% aggregate marks (40% for reserved category).";
+
+  // ─────────────────────────────────────────────────────────────
+  // 3. Comparison: Information Technology (IT) vs CSE / AI
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("it vs") ||
+    q.includes("information technology") ||
+    q.includes("difference between it") ||
+    (q.includes("it") && (q.includes("better") || q.includes("cse") || q.includes("scope") || q.includes("worth")))
+  ) {
+    answer = `☁️ **B.Tech Information Technology (IT) vs CSE & AI**
+
+Many students mistakenly believe IT is secondary to CSE. In reality, in the software industry, **IT and CSE graduates are treated with 100% equal eligibility** for software engineering, cloud, and product development jobs!
+
+• **What Makes B.Tech IT Unique at IICT (₹1,75,000/yr)**:
+  - **Core Pillars**: Cloud Computing (AWS, Azure, GCP), DevOps & CI/CD Pipelines, Enterprise Cybersecurity, Distributed Systems, and Full-Stack Web Technologies.
+  - **Industry Reality**: Over 70% of enterprise software today runs on cloud infrastructure. IT graduates directly step into Cloud Architect, DevOps Engineer, and Enterprise Security roles, which command premium starting salaries.
+  - **Placement Parity**: Top tier-1 recruiters (TCS Digital, Persistent, Infosys, Tech Mahindra, Cognizant) interview IT students on the exact same salary bands as CSE.`;
+    suggestions = [
+      "Check B.Tech IT Fees",
+      "Cloud & DevOps Packages",
+      "Eligibility Criteria",
+      "Apply for B.Tech IT"
+    ];
   }
-  // 4. Scholarships
-  else if (q.includes("scholarship") || q.includes("waiver") || q.includes("concession") || q.includes("financial aid") || q.includes("discount")) {
-    answer = "MGM University offers extensive financial assistance for 2026–27:\n\n• 150+ Merit Scholarships: 25% to 100% tuition waivers for top percentiles in MHT-CET, JEE Main, and 12th Board examinations.\n• Sports & Cultural Concessions: Fee waivers for state and national athletes.\n• Government Welfare Schemes: Direct facilitation for MahaDBT post-matric scholarships (SC/ST/OBC/SBC/VJNT) and EBC tuition subsidies.";
+
+  // ─────────────────────────────────────────────────────────────
+  // 4. Comparison: B.Tech vs BCA / B.Sc Computer Science
+  // ─────────────────────────────────────────────────────────────
+  else if (q.includes("bca") || q.includes("bsc") || q.includes("b.sc") || q.includes("btech vs")) {
+    answer = `🎓 **Why a 4-Year B.Tech is Far Superior to BCA or B.Sc:**
+
+If you are confused between pursuing a 3-year BCA/B.Sc or a 4-year B.Tech in engineering, here are the crucial differences:
+
+1. **Starting Salary & Package Ceiling**:
+   - **B.Tech Graduate**: Average ₹5.0–6.5 LPA, with top product packages reaching ₹10–18+ LPA.
+   - **BCA / B.Sc Graduate**: Average ₹2.5–3.5 LPA, primarily in technical support or manual testing.
+
+2. **Global & MS Abroad Eligibility**:
+   - B.Tech is a 4-year professional engineering degree compliant with the **Washington Accord**. You can directly apply for Master’s (MS/MBA) in the USA, Canada, Germany, and UK without requiring an extra bridge year.
+   - 3-year BCA/B.Sc degrees often face 16-year education requirement hurdles abroad.
+
+3. **Career Growth & Tier-1 Hiring**:
+   - Top tech companies (Amazon, Microsoft, Persistent, Capgemini) restrict their core Software Development Engineer (SDE) and AI Architect campus drives strictly to B.Tech engineers.`;
+    suggestions = [
+      "Check B.Tech Fees",
+      "Scholarships (Up to 100%)",
+      "Low CET Score Options",
+      "Explore All Programs"
+    ];
   }
-  // 5. Dates & Deadlines
-  else if (q.includes("date") || q.includes("deadline") || q.includes("schedule") || q.includes("last date")) {
-    answer = "Key Dates for 2026–27 Admissions:\n\n• Application Round: Open now until September 23, 2026\n• MGMU-CET Slot: Online test link provided immediately upon registration\n• Document Verification & Seat Allotment: Rolling basis on merit rank at the IICT admission office.";
+
+  // ─────────────────────────────────────────────────────────────
+  // 5. Which Branch is Best / Highest Package / Highest Scope
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("best course") ||
+    q.includes("which course is best") ||
+    q.includes("highest package") ||
+    q.includes("highest salary") ||
+    q.includes("more scope") ||
+    q.includes("future scope") ||
+    q.includes("which branch") ||
+    q.includes("which should i choose")
+  ) {
+    answer = `🚀 **Which Engineering Branch is Best for You?**
+
+At IICT, every single branch is specialized in convergence technologies. Here is how they stack up by career trajectory:
+
+1. **B.Tech CSE (Artificial Intelligence)**:
+   - **Advantage**: The #1 universally accepted tech degree worldwide. Highest volume of on-campus placement opportunities across both classic software engineering and modern AI.
+
+2. **B.Tech Artificial Intelligence & Machine Learning**:
+   - **Advantage**: Fastest-growing salary curve globally. Extreme demand for generative AI, LLM fine-tuning, and robotics engineers. Best tuition ROI (₹1.50L/yr).
+
+3. **B.Tech Data Science**:
+   - **Advantage**: Massive corporate demand in financial services, fintech, healthcare, and consulting. Highly valued for strategic leadership roles.
+
+4. **B.Tech Information Technology**:
+   - **Advantage**: High placement stability in enterprise cloud systems, DevOps automation, and cybersecurity.
+
+💡 **Recommendation**: If you want the most versatile all-rounder degree, choose **CSE (AI)**. If you are deeply motivated by generative AI and want the highest ROI, choose **AI & ML**!`;
+    suggestions = [
+      "AI & ML vs CSE (AI)",
+      "Check Fees Schedule",
+      "Placement Highlights",
+      "Check Eligibility Criteria"
+    ];
   }
-  // 6. Placements & Recruiters
-  else if (q.includes("placement") || q.includes("package") || q.includes("salary") || q.includes("company") || q.includes("recruit")) {
-    answer = "IICT Placement Highlights:\n\n• Top Recruiters: Tata Consultancy Services, Infosys, Tech Mahindra, Cognizant, Persistent Systems, Capgemini, and leading AI product startups.\n• Dedicated Training: Dedicated training on DSA, Cloud architectures, Deep Learning frameworks, and mock technical interviews starting from 3rd year.\n• Campus AI Research Labs equipped with high-performance GPU clusters.";
+
+  // ─────────────────────────────────────────────────────────────
+  // 6. Low CET / Low JEE / Low Marks Fears & Reassurance
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    (q.includes("low") || q.includes("less") || q.includes("drop") || q.includes("failed") || q.includes("poor") || q.includes("didn't get") || q.includes("did not get") || q.includes("rank") || q.includes("can i get") || q.includes("is it possible") || q.includes("marks kam") || q.includes("score kam")) &&
+    (q.includes("cet") || q.includes("jee") || q.includes("score") || q.includes("percentile") || q.includes("marks") || q.includes("admission") || q.includes("seat"))
+  ) {
+    answer = `🌟 **Don't Worry! You Can Definitely Secure Admission at MGM University IICT!**
+
+A lower score in MHT-CET or JEE (even 40–70 percentile, or low 12th marks) does **NOT** stop you from pursuing high-demand B.Tech in AI, CSE, or Data Science. Here is why:
+
+1. **MGMU-CET 2026 (Your Second Chance)**:
+   - MGM University conducts its own standardized online entrance exam (**MGMU-CET 2026**).
+   - It is designed with a student-friendly format and **NO negative marking**. You receive a fresh, fair opportunity to qualify regardless of state CET scores!
+
+2. **Direct 12th Board PCM Eligibility**:
+   - As per official AICTE & Government of Maharashtra guidelines, if you have passed 10+2 with **minimum 45% aggregate in PCM** (Physics, Mathematics, plus Chemistry/CS/IT/Bio) — or **40% for reserved category** (SC/ST/OBC/EWS/PwD) — you are legally eligible for Institutional Merit Seats.
+
+3. **Early Provisional Seat Reservation**:
+   - Admissions are offered on a rolling merit basis. By completing provisional registration now, you can lock in your preferred branch before institutional quotas fill up!`;
+    suggestions = [
+      "How to take MGMU-CET?",
+      "12th PCM Merit Criteria",
+      "Reserve Provisional Seat",
+      "Talk to Admissions Counsellor"
+    ];
   }
-  // 7. Hostel & Campus
-  else if (q.includes("hostel") || q.includes("mess") || q.includes("stay") || q.includes("accommodation") || q.includes("campus") || q.includes("facility")) {
-    answer = "Campus & Hostel Facilities:\n\n• On-Campus Hostels: Separate secure hostels for boys and girls with high-speed Wi-Fi, 24/7 power backup, hygienic dining mess, sports gymnasium, and round-the-clock medical care.\n• Campus Location: MGM University, MGM Campus, N-6, CIDCO, Chhatrapati Sambhajinagar (Aurangabad).";
+
+  // ─────────────────────────────────────────────────────────────
+  // 7. Direct Admission / Without CET / Management Quota
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("without cet") ||
+    q.includes("without jee") ||
+    q.includes("direct admission") ||
+    q.includes("management quota") ||
+    q.includes("institutional quota") ||
+    q.includes("donation") ||
+    q.includes("capitation")
+  ) {
+    answer = `🏛️ **Official Policy: Direct Admission & Institutional Merit Seats**
+
+• **Zero Donation / Zero Capitation**:
+  MGM University follows a strict, ethical transparent admissions code. There is **zero capitation fee or donation**. All admissions are based on transparent institutional merit and statutory eligibility.
+
+• **Can You Apply Without MHT-CET or JEE?**:
+  **YES!** If you did not appear for MHT-CET or JEE, you can appear for the **MGMU-CET 2026 online test** conducted directly by the university upon completing your registration.
+
+• **Eligibility for Direct Institutional Quota**:
+  1. Passed 10+2 (HSC) with Physics & Mathematics + Chemistry/CS/IT/Bio.
+  2. Minimum 45% aggregate in PCM (40% for Maharashtra reserved categories: SC/ST/OBC/EWS).
+  3. Valid score in MHT-CET 2026, JEE Main 2026, or MGMU-CET 2026.`;
+    suggestions = [
+      "Register for MGMU-CET",
+      "Check Fee Schedule",
+      "Required Documents",
+      "Talk to Counsellor"
+    ];
   }
-  // 8. Contact & Helplines
-  else if (q.includes("contact") || q.includes("helpline") || q.includes("phone") || q.includes("email") || q.includes("address") || q.includes("counselor") || q.includes("talk to")) {
-    answer = "Official IICT MGM University Helpdesk:\n\n• Admission Helplines: +91 0240-6481000 | +91 906 761 2000 | +91 93564 36622\n• Official Email: admissions@mgmu.ac.in | iict@mgmu.ac.in\n• Office Hours: Monday – Saturday (9:30 AM – 5:00 PM)";
+
+  // ─────────────────────────────────────────────────────────────
+  // 8. Degree Validity: UGC Recognition, UPSC, GATE, MS Abroad
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("ugc") ||
+    q.includes("valid") ||
+    q.includes("recogni") ||
+    q.includes("govt job") ||
+    q.includes("government job") ||
+    q.includes("upsc") ||
+    q.includes("mpsc") ||
+    q.includes("gate") ||
+    q.includes("abroad") ||
+    q.includes("wes") ||
+    q.includes("ms in") ||
+    q.includes("fake") ||
+    q.includes("private university")
+  ) {
+    answer = `🏛️ **Authoritative Statutory Credentials & Degree Recognition:**
+
+MGM University is a premier, fully recognized institution with highest academic credentials:
+
+• **UGC Recognition**:
+  MGM University is established under Maharashtra Act No. XXVI of 2019 and is recognized by the **University Grants Commission (UGC)** under Section 2(f) of the UGC Act, 1956.
+
+• **100% Eligible for All Government Jobs & Exams**:
+  Graduates are fully eligible for:
+  - **Civil Services**: UPSC (IAS, IPS, IFS), MPSC (State Services), IES (Indian Engineering Services).
+  - **Competitive Technical Exams**: GATE (for M.Tech at IITs/NITs and PSU recruitments).
+  - **Public Sector Undertakings (PSUs)**: ISRO, DRDO, BARC, IOCL, ONGC, BHEL, NTPC.
+
+• **Global Recognition for MS Abroad (WES Approved)**:
+  Degrees awarded by MGM University are recognized worldwide by **WES (World Education Services)** for direct admission to Master’s (MS/MBA) and Ph.D. programs in the USA, Canada, UK, Germany, and Australia.
+
+• **44-Year Heritage**:
+  The Mahatma Gandhi Mission (MGM) trust has been a pioneer in higher education since **1982**, with over 1,00,000+ alumni leading industries globally.`;
+    suggestions = [
+      "Why Choose MGM University?",
+      "Placement Highlights",
+      "Fee Schedule 2026-27",
+      "Book Campus Tour"
+    ];
   }
-  // 9. Greeting / General fallback
+
+  // ─────────────────────────────────────────────────────────────
+  // 9. Why Choose MGM University IICT vs Pune / Mumbai Colleges
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("why mgm") ||
+    q.includes("why choose") ||
+    q.includes("pune") ||
+    q.includes("mumbai") ||
+    q.includes("other college") ||
+    q.includes("compare college") ||
+    q.includes("mit") ||
+    q.includes("vit") ||
+    q.includes("coep") ||
+    q.includes("why iict")
+  ) {
+    answer = `🏆 **Why Choose MGM University IICT Over Other Colleges?**
+
+Here is why hundreds of students from Pune, Mumbai, Nashik, and across Maharashtra choose IICT:
+
+1. **Specialized Convergence Tech Institute**:
+   While most colleges treat AI or Data Science as a generic sub-branch of an aging mechanical/civil engineering college, IICT is built from the ground up exclusively for future technologies.
+
+2. **NVIDIA GPU & AI Research Clusters**:
+   Undergraduates get hands-on access to dedicated High-Performance Computing (HPC) labs, GPU clusters, and IoT/Robotics workstations.
+
+3. **Tremendous Cost & Living Advantage**:
+   - Pune/Mumbai private colleges charge **₹2.5L to ₹4.5L/year** tuition + ₹1.5L to ₹2.5L hostel/living costs (total ₹16–28 Lakhs for 4 years).
+   - At MGMU IICT, tuition starts at just **₹1.50L/year** with serene, highly affordable on-campus living, saving over **₹10 to ₹14 Lakhs** with equal or superior tech placement opportunities!
+
+4. **150+ Merit Scholarships**:
+   Up to 100% tuition waivers for merit holders, plus complete facilitation for state MahaDBT scholarships.
+
+5. **Magnificent 70-Acre Campus**:
+   Olympic-size sports stadium, cricket grounds, swimming pool, badminton arena, music academy, and 1000-bed on-campus MGM Medical Hospital.`;
+    suggestions = [
+      "Check 100% Scholarships",
+      "Hostel & Living Costs",
+      "Placement Packages",
+      "Book Campus Tour"
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 10. Placements, Recruiters, and Salary Packages
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("placement") ||
+    q.includes("package") ||
+    q.includes("salary") ||
+    q.includes("company") ||
+    q.includes("recruit") ||
+    q.includes("highest") ||
+    q.includes("average") ||
+    q.includes("job")
+  ) {
+    answer = `💼 **IICT Official Placement Highlights (2026–27):**
+
+• **Salary Highlights**:
+  - **Highest Packages**: **₹10.0 LPA to ₹18.0+ LPA** in niche AI, Cloud, and Software Product startups.
+  - **Average Package**: **₹5.0 LPA to ₹6.5 LPA** across tier-1 software companies.
+
+• **Key Recruiters**:
+  Tata Consultancy Services (TCS Digital/Ninja), Infosys, Persistent Systems, Tech Mahindra, Cognizant, Capgemini, L&T Technology Services, Wipro, and emerging AI & Data Science startups.
+
+• **How IICT Prepares You for Top Tech Offers**:
+  1. **Year 2 Onwards**: Rigorous competitive programming on LeetCode & HackerRank, Data Structures & Algorithms (DSA), and Full-Stack development.
+  2. **Certifications**: Integrated industry certifications with AWS Academy, Google Cloud, and NVIDIA Deep Learning Institute (DLI).
+  3. **Mandatory Paid Internships**: 6th & 8th semester industry internships giving real corporate engineering experience.
+  4. **Mock Technical & HR Panels**: Conducted by alumni and senior corporate hiring managers.`;
+    suggestions = [
+      "Check Course Fees",
+      "AI vs CSE Placements",
+      "Do I need coding experience?",
+      "Apply for Admission"
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 11. Beginner Coding Fears / Non-CS Background
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("coding") ||
+    q.includes("beginner") ||
+    q.includes("never coded") ||
+    q.includes("biology") ||
+    q.includes("difficult") ||
+    q.includes("tough") ||
+    q.includes("non cs") ||
+    q.includes("hard") ||
+    q.includes("programming") ||
+    q.includes("learn code")
+  ) {
+    answer = `💡 **Never Coded Before? Don't Worry at All!**
+
+Over **60% of students entering first-year engineering** have never written a single line of code, or studied Biology/General Science in 11th & 12th. You will do exceptionally well!
+
+• **How IICT Mentors Beginners Step-by-Step**:
+  1. **Taught from Absolute Ground Zero**: Semester 1 begins with "Computational Thinking & Python Programming" assuming zero prior experience. Everything is explained from the very basics.
+  2. **1:2 Theory to Lab Ratio**: For every 1 hour of classroom concept, you spend 2 hours in modern computer labs with faculty mentors assisting you line by line.
+  3. **Student Coding Clubs & Hackathons**: Our Google Developer Student Club (GDSC) and AI Squad organize friendly peer-to-peer coding bootcamps where seniors mentor first-year students.
+  4. **Rapid Progress**: Within 6 months, even absolute beginners build their first web apps and machine learning models with confidence!`;
+    suggestions = [
+      "Compare AI vs CSE",
+      "Check Fees (2026-27)",
+      "Talk to Faculty Mentor",
+      "Eligibility Criteria"
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 12. Fees, Installments & Education Loans
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("fee") ||
+    q.includes("cost") ||
+    q.includes("tuition") ||
+    q.includes("installment") ||
+    q.includes("loan") ||
+    q.includes("bank") ||
+    q.includes("afford") ||
+    q.includes("expense") ||
+    q.includes("charges") ||
+    q.includes("check fees")
+  ) {
+    answer = `💰 **Official 2026–27 Annual Tuition Fee Schedule:**
+
+• **B.Tech Artificial Intelligence & Machine Learning**: ₹1,50,000 / year
+• **B.Tech Data Science**: ₹1,50,000 / year
+• **B.Tech Information Technology**: ₹1,75,000 / year
+• **B.Tech CSE (Artificial Intelligence)**: ₹2,04,500 / year
+• **B.Tech Lateral Entry (Direct Second Year - DSY)**: ₹1,50,000 / year
+• **M.Tech (Data Science / AI & ML)**: ₹1,50,000 / year
+• **PG Diploma in Cyber Security**: ₹1,00,000 / year
+
+• **Payment in Convenient Installments**:
+  Yes! Tuition fees can be paid in semester installments to ease family financial planning.
+
+• **100% Education Loan Support**:
+  MGM University has institutional tie-ups with **SBI, HDFC Bank, Bank of Maharashtra, and Punjab National Bank**. We provide official Bonafide and Fee Estimates for rapid loan sanction letters with zero collateral up to ₹7.5 Lakhs.
+
+• **150+ Merit Scholarships**: 25% to 100% tuition waivers awarded annually!`;
+    suggestions = [
+      "Scholarship Eligibility",
+      "Hostel & Mess Charges",
+      "Education Loan Process",
+      "Confirm Admission"
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 13. Scholarships (150+ Merit Scholarships & MahaDBT)
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("scholarship") ||
+    q.includes("waiver") ||
+    q.includes("concession") ||
+    q.includes("discount") ||
+    q.includes("financial aid") ||
+    q.includes("mahadbt") ||
+    q.includes("ebc") ||
+    q.includes("caste") ||
+    q.includes("sc") ||
+    q.includes("st") ||
+    q.includes("obc")
+  ) {
+    answer = `🎖️ **MGM University Scholarships & Financial Assistance (2026–27):**
+
+MGM University is dedicated to ensuring no deserving student is denied quality education due to financial constraints:
+
+1. **MGM University Merit Scholarships (150+ Awarded Annually)**:
+   • **100% Tuition Waiver**: For state board/CBSE toppers (>95%) and top MHT-CET/JEE percentiles.
+   • **50% Tuition Waiver**: For students scoring 85% to 94.9% in 12th Board.
+   • **25% Tuition Waiver**: For students scoring 75% to 84.9% in 12th Board.
+
+2. **Government of Maharashtra (MahaDBT) Welfare Schemes**:
+   • **SC / ST Students**: **100% Tuition Fee Waiver** facilitated directly through the social welfare portal.
+   • **OBC / EBC / SEBC / VJNT / SBC Students**: **50% Tuition Fee Concession** through the state portal.
+
+3. **Sports & Special Concessions**:
+   Special scholarships awarded to district, state, and national sports achievers.`;
+    suggestions = [
+      "Calculate My Scholarship",
+      "Check 12th Eligibility",
+      "Tuition Fee Schedule",
+      "Apply with Scholarship"
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 14. Hostels, Mess, Food, Safety & Campus Life
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("hostel") ||
+    q.includes("mess") ||
+    q.includes("stay") ||
+    q.includes("accommodation") ||
+    q.includes("room") ||
+    q.includes("food") ||
+    q.includes("safety") ||
+    q.includes("girls") ||
+    q.includes("ragging") ||
+    q.includes("campus") ||
+    q.includes("facility")
+  ) {
+    answer = `🏡 **Campus Life, Hostels & Safety Amenities:**
+
+• **On-Campus Secure Hostels**:
+  - Separate high-security hostels for boys and girls located inside the secure university boundary.
+  - Biometric turnstile entry, 24/7 CCTV surveillance, and dedicated female wardens for girls' hostels.
+  - Strict Zero-Tolerance Anti-Ragging regulations with active flying squads.
+
+• **Room & Living Amenities**:
+  - Clean twin and triple sharing rooms with study tables, ergonomic chairs, wardrobes, and high-speed Wi-Fi.
+  - 24/7 power backup, pure drinking water with multi-stage RO filtration, and on-campus laundry service.
+
+• **Hygienic Dining Mess**:
+  - Wholesome, nutritious pure vegetarian breakfast, lunch, high-tea, and dinner planned by a joint student-faculty mess committee.
+
+• **Medical & Sports Support**:
+  - Round-the-clock emergency healthcare at the adjacent **1000-bed MGM Medical College & Hospital** (free/subsidized OPD for students).
+  - Olympic-standard cricket ground, synthetic running tracks, indoor badminton courts, swimming pool, and modern gym.`;
+    suggestions = [
+      "Check Tuition Fees",
+      "Campus Location & Map",
+      "Book Campus Visit",
+      "Talk to Admissions"
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 15. Branch Change & Lateral Entry (Direct Second Year - DSY)
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("branch change") ||
+    q.includes("change branch") ||
+    q.includes("switch branch") ||
+    q.includes("dsy") ||
+    q.includes("diploma") ||
+    q.includes("lateral") ||
+    q.includes("polytechnic")
+  ) {
+    answer = `🔄 **Branch Change & Lateral Entry (DSY) Opportunities:**
+
+• **Branch Change Facility**:
+  Yes! If you join one program (such as B.Tech IT or Data Science) and perform strongly in your First Year (Semesters 1 & 2), you can apply for internal sliding/branch change to CSE (AI) or AI & ML based on first-year CGPA merit and seat vacancies.
+
+• **Direct Second Year (DSY) Lateral Entry for Polytechnic Diploma Holders**:
+  - **Eligibility**: Passed 3-year Engineering Diploma with minimum **45% aggregate** (40% for reserved category SC/ST/OBC/EWS).
+  - **Course Duration**: 3 Years directly (admitted into Semester 3).
+  - **Annual Tuition Fee**: ₹1,50,000 / year.
+  - **Branches Open**: B.Tech AI & ML, B.Tech CSE (AI), B.Tech IT, and B.Tech Data Science.`;
+    suggestions = [
+      "Apply for DSY",
+      "Check DSY Fees",
+      "Required Documents",
+      "Talk to Counsellor"
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 16. Admission Process, Important Dates & Documents Required
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("document") ||
+    q.includes("how to apply") ||
+    q.includes("procedure") ||
+    q.includes("steps") ||
+    q.includes("process") ||
+    q.includes("last date") ||
+    q.includes("deadline") ||
+    q.includes("schedule") ||
+    q.includes("date") ||
+    q.includes("admission date")
+  ) {
+    answer = `📅 **Admission Process, Important Dates & Required Documents (2026–27):**
+
+• **4-Step Simple Admission Procedure**:
+  1. **Step 1: Submit Application**: Register your profile right here in this portal.
+  2. **Step 2: Scorecard Verification**: Submit 10th/12th marks and CET/JEE/MGMU-CET scores.
+  3. **Step 3: Provisional Seat Offer**: Merit seat allocation letter issued by the Admissions Directorate.
+  4. **Step 4: Admission Confirmation**: Pay initial token fee to lock your seat reservation.
+
+• **Key Dates**:
+  - **Active Admissions Round**: Open now until **September 23, 2026**.
+  - **MGMU-CET Slot**: Online test link generated immediately upon application.
+
+• **Required Documents Checklist**:
+  1. 10th (SSC) & 12th (HSC) Marksheets
+  2. MHT-CET 2026 / JEE Main 2026 Scorecard (or MGMU-CET test confirmation)
+  3. School/College Leaving Certificate (Transfer Certificate - TC)
+  4. Domicile & Nationality Certificate (or Birth Certificate)
+  5. Caste Certificate & Caste Validity (for reserved categories: SC/ST/OBC/VJNT)
+  6. Aadhaar Card copy & 4 Passport size photographs`;
+    suggestions = [
+      "Reserve Provisional Seat",
+      "Check Fees (2026-27)",
+      "Talk to Admissions",
+      "Check Eligibility"
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 17. Campus Visit & Location
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("visit") ||
+    q.includes("location") ||
+    q.includes("where is") ||
+    q.includes("address") ||
+    q.includes("map") ||
+    q.includes("tour") ||
+    q.includes("city") ||
+    q.includes("aurangabad") ||
+    q.includes("sambhajinagar")
+  ) {
+    answer = `📍 **Campus Location & Guided Visit Information:**
+
+• **Campus Address**:
+  MGM University Institute of Interdisciplinary & Convergence Technology (IICT),
+  MGM Campus, N-6, CIDCO, Chhatrapati Sambhajinagar (Aurangabad), Maharashtra 431003.
+
+• **Convenient Connectivity**:
+  - 10 minutes from Central Bus Station (CBS).
+  - 15 minutes from Chhatrapati Sambhajinagar Railway Station.
+  - 10 minutes from Chikalthana Airport (IXU).
+
+• **Campus Tour & Office Timings**:
+  Open Monday through Saturday, **9:30 AM to 5:00 PM**.
+  You and your parents are warmly invited to tour our state-of-the-art AI laboratories, robotics studios, smart classrooms, and on-campus hostels!`;
+    suggestions = [
+      "Book Guided Campus Tour",
+      "Check Program Fees",
+      "Hostel Details",
+      "Talk to Admissions"
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 18. Contact & Admissions Helpline
+  // ─────────────────────────────────────────────────────────────
+  else if (
+    q.includes("contact") ||
+    q.includes("helpline") ||
+    q.includes("phone") ||
+    q.includes("number") ||
+    q.includes("email") ||
+    q.includes("counselor") ||
+    q.includes("talk to")
+  ) {
+    answer = `📞 **Official MGM University IICT Admissions Helpdesk:**
+
+• **Direct Admissions Helplines**:
+  - Landline: +91 0240-6481000
+  - Mobile / WhatsApp: +91 906 761 2000 | +91 93564 36622
+• **Official Email**: admissions@mgmu.ac.in | iict@mgmu.ac.in
+• **Office Hours**: Monday – Saturday (9:30 AM – 5:00 PM)
+
+You can also submit your inquiry here in the chat to have our Senior Faculty Counsellor directly call and guide you!`;
+    suggestions = [
+      "Submit Priority Callback",
+      "Check Fees Schedule",
+      "Compare Programs",
+      "Check Scholarships"
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 19. General Fallback & Warm Greeting
+  // ─────────────────────────────────────────────────────────────
   else {
     if (p.name) {
-      answer = `Thank you, ${p.name}! I am your IICT Admission Counsellor. I can provide accurate details on 2026–27 course fees, compare programs, check your eligibility, and calculate your merit scholarship.`;
+      answer = `Hello ${p.name}! As your official IICT Admission Counsellor, I am here to help you navigate your engineering decisions with complete confidence.
+
+I can provide transparent facts on:
+• **Curriculum & Career Comparisons**: AI & ML vs CSE (AI) vs Data Science vs IT.
+• **Academic Eligibility & Low Score Solutions**: MGMU-CET 2026 and 12th PCM merit seats.
+• **2026–27 Official Fees & Installments**: Starting from ₹1.50L/year.
+• **150+ Merit Scholarships**: Up to 100% tuition fee waivers.
+• **Placements & Internships**: Average ₹5.0–6.5 LPA, highest ₹18+ LPA.`;
     } else {
-      answer = "Welcome to IICT Admissions! I am your official admission counsellor for the 2026–27 academic year. I can provide verified fees, compare AI & ML vs CSE (AI) vs Data Science, check your CET/JEE eligibility, and detail merit scholarships.";
+      answer = `Welcome to MGM University IICT Admissions (2026–27)! 🎓
+
+Choosing the right engineering program is one of your most important decisions. I can give you authoritative, transparent answers to help you compare programs and eliminate doubts:
+
+• **Program Comparisons**: AI & ML vs CSE (AI) vs Data Science vs IT.
+• **Worried about CET/JEE score?**: How to secure a seat via MGMU-CET or 12th PCM merit.
+• **Official Fees & Installments**: Starting at ₹1.50 Lakhs/year.
+• **Merit Scholarships**: Up to 100% tuition waivers for top scores.
+• **Placements**: Average packages ₹5.0–6.5 LPA, top recruiters TCS, Persistent, Infosys.`;
     }
+    suggestions = [
+      "AI & ML vs CSE (AI)",
+      "Data Science vs AI",
+      "Low CET Score Options",
+      "Check Fees (2026–27)"
+    ];
   }
 
-  // Progressive conversational prompt based on missing info:
+  // ─────────────────────────────────────────────────────────────
+  // Conversational Next Step Prompt (Subtle, non-intrusive)
+  // ─────────────────────────────────────────────────────────────
   let prompt = "";
   let actionType = null;
 
-  if (!p.name) {
-    prompt = "\n\nMay I know your **full name** so I can personalize your official counselling record?";
-  } else if (!p.interested_program) {
-    prompt = `\n\nWhich program excites you most, ${p.name}? We offer B.Tech AI & ML (₹1.50L/yr), B.Tech CSE (AI) (₹2.045L/yr), B.Tech IT (₹1.75L/yr), or B.Tech Data Science (₹1.50L/yr)?`;
-  } else if (!p.marks_12th && !p.entrance_score) {
-    prompt = `\n\nTo evaluate your seat eligibility and check if you qualify for our 25% to 100% merit scholarship waivers, **what is your 12th percentage or entrance exam score (MHT-CET / JEE)?**`;
-  } else if (!p.phone || !p.email) {
-    prompt = `\n\nGreat! To ensure the IICT admissions committee can send you your official eligibility report and seat reservation confirmation, **could you please share your WhatsApp mobile number and email address?**`;
-  } else {
-    // All required information gathered!
-    prompt = `\n\n📋 **Your Official IICT Admission Summary:**\n• Candidate: **${p.name}**\n• Target Program: **${p.interested_program}**\n• Contact: **${p.phone}** | **${p.email}**\n• Academic Background: **${p.academic_background || '12th PCM'}**\n• Entrance Score: **${p.entrance_exam || 'Eligible'}**\n• Domicile: **${p.location}**\n\nAll your details are ready! Would you like me to submit your official priority admission inquiry to the IICT admissions desk now?`;
+  if (p.name && p.interested_program && (p.phone || p.email) && (p.marks_12th || p.entrance_score || p.academic_background)) {
+    // All key student profile info collected -> propose one-click inquiry submission!
+    prompt = `\n\n📋 **Your Official IICT Admission Profile:**\n• Candidate: **${p.name}**\n• Target Program: **${p.interested_program}**\n• Contact: **${p.phone || 'Phone pending'}** | **${p.email || 'Email pending'}**\n• Academic Marks: **${p.academic_background || (p.marks_12th ? `${p.marks_12th}%` : '12th PCM')}**\n• Entrance: **${p.entrance_exam || 'MGMU-CET / Eligible'}**\n• Domicile: **${p.location}**\n\nYour profile is complete! Would you like me to submit your priority admission application to the admissions directorate now?`;
     actionType = "submit_proposal";
+  } else if (!p.name) {
+    prompt = `\n\n💡 *Tip: Feel free to share your full name and 12th marks anytime so I can check your exact scholarship waiver and provisional seat eligibility!*`;
+  } else if (!p.interested_program) {
+    prompt = `\n\nWhich program aligns best with your career goals, ${p.name}? (B.Tech AI & ML, B.Tech CSE, Data Science, or IT?)`;
+  } else if (!p.phone && !p.email) {
+    prompt = `\n\nWould you like our admissions desk to send you the official seat allotment guide for **${p.interested_program}**? You can share your WhatsApp number or email anytime!`;
   }
 
   return {
     text: answer + prompt,
-    actionType
+    actionType,
+    suggestions
   };
 }
+
 
 function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) {
   const [messages, setMessages] = useState([
@@ -806,7 +1425,13 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
       id: "m-1",
       role: "assistant",
       content:
-        "Hello and welcome to MGM University IICT Admissions (2026–27)! 🎓\n\nI am your official AI Admission Counsellor. I can answer all your questions regarding our specialized B.Tech, M.Tech, and Diploma programs, official 2026–27 fee structures, eligibility cutoffs, and 150+ merit scholarships.\n\nTo begin your personal admission counselling, **what is your full name**, and which engineering program or domain interests you?"
+        "Hello and welcome to MGM University IICT Admissions (2026–27)! 🎓\n\nI am your official AI Admission Counsellor. Choosing an engineering specialization is a huge decision, and I am here to give you crystal-clear, transparent guidance on program choices (AI vs CSE vs Data Science vs IT), official fees, eligibility, cutoffs, and 150+ merit scholarships.\n\nTo begin, what questions or comparisons can I help clarify for you?",
+      suggestions: [
+        "AI & ML vs CSE (AI)",
+        "Data Science vs AI",
+        "Low CET Score Options",
+        "Check Fees (2026–27)"
+      ]
     }
   ]);
 
@@ -860,7 +1485,13 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
         id: "m-1",
         role: "assistant",
         content:
-          "Hello and welcome to MGM University IICT Admissions (2026–27)! 🎓\n\nI am your official AI Admission Counsellor. I can answer all your questions regarding our specialized B.Tech, M.Tech, and Diploma programs, official 2026–27 fee structures, eligibility cutoffs, and 150+ merit scholarships.\n\nTo begin your personal admission counselling, **what is your full name**, and which engineering program or domain interests you?"
+          "Hello and welcome to MGM University IICT Admissions (2026–27)! 🎓\n\nI am your official AI Admission Counsellor. Choosing an engineering specialization is a huge decision, and I am here to give you crystal-clear, transparent guidance on program choices (AI vs CSE vs Data Science vs IT), official fees, eligibility, cutoffs, and 150+ merit scholarships.\n\nTo begin, what questions or comparisons can I help clarify for you?",
+        suggestions: [
+          "AI & ML vs CSE (AI)",
+          "Data Science vs AI",
+          "Low CET Score Options",
+          "Check Fees (2026–27)"
+        ]
       }
     ]);
   };
@@ -897,7 +1528,7 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
     setProfile(updatedProfile);
 
     setTimeout(() => {
-      const { text: replyText, actionType } = generateCounsellorReply(text, updatedProfile);
+      const { text: replyText, actionType, suggestions } = generateCounsellorReply(text, updatedProfile);
 
       if (actionType === "submit_now") {
         setIsTyping(false);
@@ -919,7 +1550,8 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
           id: `a-${Date.now()}`,
           role: "assistant",
           content: replyText,
-          actionType: actionType
+          actionType: actionType,
+          suggestions: suggestions || []
         }
       ]);
       setIsTyping(false);
@@ -1024,6 +1656,28 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
                     </div>
                     <div className="msg-bubble-assistant">
                       <div style={{ whiteSpace: "pre-line" }}>{m.content}</div>
+
+                      {/* Dynamic Contextual Suggestion Pills */}
+                      {m.suggestions && m.suggestions.length > 0 && (
+                        <div className="msg-suggestions-wrap">
+                          <span className="msg-suggestions-label">
+                            <Sparkles size={12} color="#16a34a" /> Explore Related Topics:
+                          </span>
+                          <div className="msg-suggestions-pills">
+                            {m.suggestions.map((sug) => (
+                              <button
+                                key={sug}
+                                type="button"
+                                className="msg-suggestion-pill"
+                                onClick={() => handleSendMessage(sug)}
+                              >
+                                {sug}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {m.actionType === "submit_proposal" && (
                         <div className="in-chat-submission-card">
                           <div className="in-chat-card-header">
