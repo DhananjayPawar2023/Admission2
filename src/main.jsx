@@ -200,22 +200,25 @@ function formatCurrency(val) {
 
 function AnimatedMgmLogo({ onClick }) {
   return (
-    <button className="mgm-animated-logo-btn" onClick={onClick} title="Institute of Information and Communication Technology - MGM University">
-      <div className="mgm-animated-crest-wrap">
-        <div className="mgm-crest-halo" />
+    <button className="mgm-brand-header-btn" onClick={onClick} title="IICT - MGM University">
+      <div className="mgm-logo-emblem-box">
         <img
           src="/LogoMGM.svg"
           alt="MGM University Crest"
-          className="mgm-crest-img"
+          className="mgm-crest-vector"
           onError={(e) => {
             e.currentTarget.src = "https://cdn.mgmtech.org/static/mgmu.ac.in/assets/images/LogoMGM.svg";
           }}
         />
       </div>
+      <div className="mgm-brand-divider" />
       <div className="mgm-brand-titles">
-        <span className="mgm-brand-univ">MGM UNIVERSITY</span>
+        <div className="mgm-brand-row">
+          <span className="mgm-brand-univ">MGM UNIVERSITY</span>
+          <span className="mgm-brand-badge">NAAC 'A' GRADE</span>
+        </div>
         <span className="mgm-brand-inst">Institute of Information &amp; Communication Technology (IICT)</span>
-        <span className="mgm-brand-badge">Admissions 2026–27 · NAAC 'A' Grade</span>
+        <span className="mgm-admissions-year">Admissions 2026–27 · Aurangabad</span>
       </div>
     </button>
   );
@@ -225,27 +228,31 @@ function Header({ onHome, onInquiry, onPrograms, onMyInquiry, onStaff, session, 
   return (
     <header className="site-header">
       <AnimatedMgmLogo onClick={onHome} />
-      <nav>
+      <nav className="site-nav">
+        <button className={activeNav === "home" ? "active" : ""} onClick={onHome}>
+          Home
+        </button>
+        <button className={activeNav === "programs" ? "active" : ""} onClick={onPrograms}>
+          Programs &amp; Fees
+        </button>
         <button className={activeNav === "inquiry" ? "active" : ""} onClick={onInquiry}>
           Start Inquiry
         </button>
-        <button className={activeNav === "programs" ? "active" : ""} onClick={onPrograms}>
-          Programs & Fees
-        </button>
         <button className={activeNav === "myInquiry" ? "active" : ""} onClick={onMyInquiry}>
-          My Inquiry
+          Track Inquiry
         </button>
       </nav>
       <div className="header-right">
-        <button className="contact-link" onClick={onInquiry}>
-          Helpline <ArrowRight size={14} />
+        <a href="tel:+919404494299" className="header-phone-badge" title="Call IICT Admission Helpline">
+          <Phone size={13} />
+          <span>+91 940 449 4299</span>
+        </a>
+        <button className="header-cta-btn" onClick={onInquiry}>
+          Apply Now <ArrowRight size={13} />
         </button>
-        <span className="status">
-          <i /> Admissions 2026–27
-        </span>
         {session ? (
           <button className="header-signin-btn logged-in" onClick={onStaff} title="Staff Dashboard">
-            <ShieldCheck size={13} /> Staff Portal
+            <ShieldCheck size={13} /> Staff
           </button>
         ) : (
           <button className="header-signin-btn" onClick={onStaff} title="Staff & Teacher Sign In">
@@ -517,115 +524,196 @@ function Home({ onStart, onCompare, onStaff, onMyInquiry, session }) {
 }
 
 function Compare({ programs, facts, onBack, onInquiry, onMyInquiry, onStaff, session }) {
-  const [selected, setSelected] = useState(["btech-aiml", "btech-cse-ai", "btech-it", "btech-ds"]);
-  const visible = programs.filter((p) => selected.includes(p.id));
-  const toggle = (id) =>
-    setSelected((items) =>
-      items.includes(id) ? (items.length > 1 ? items.filter((item) => item !== id) : items) : items.length < 4 ? [...items, id] : items
-    );
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredPrograms = programs.filter((p) => {
+    const matchesCategory =
+      activeCategory === "all" ||
+      (activeCategory === "ug" && p.level === "Undergraduate" && p.id !== "btech-dsy") ||
+      (activeCategory === "dsy" && p.id === "btech-dsy") ||
+      (activeCategory === "pg" && p.level === "Postgraduate") ||
+      (activeCategory === "diploma" && (p.level === "Diploma" || p.level === "Certificate"));
+
+    const matchesSearch =
+      !searchQuery.trim() ||
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.career_opportunities.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <>
       <Header
         onHome={onBack}
-        onInquiry={onInquiry}
+        onInquiry={() => onInquiry()}
         onPrograms={() => {}}
         onMyInquiry={onMyInquiry}
         onStaff={onStaff}
         session={session}
         activeNav="programs"
       />
-      <main className="compare-page">
-        <div className="compare-heading">
+      <main className="programs-boxes-page">
+        <div className="programs-header-section">
           <div>
-            <p className="eyebrow">OFFICIAL IICT 2026–27 CURRICULUM & FEE SCHEDULE</p>
-            <h1>Programs & Fee Structure</h1>
-            <p className="muted">Authoritative fees and eligibility criteria sourced from http://iict.mgmu.ac.in.</p>
+            <p className="eyebrow">OFFICIAL IICT 2026–27 ACADEMIC SCHEDULE</p>
+            <h1>Programs &amp; Fee Structure</h1>
+            <p className="subtitle">
+              Verified annual tuition fees, approved seat matrix, eligibility criteria, and career roles for all programs at the Institute of Information and Communication Technology (IICT), MGM University.
+            </p>
           </div>
-          <button className="primary-button" onClick={onInquiry}>
-            Apply for Counselling <ArrowRight size={15} />
+          <button className="primary-button" onClick={() => onInquiry()}>
+            Start Admission Inquiry <ArrowRight size={15} />
           </button>
         </div>
 
-        <div className="compare-picker">
-          {programs.map((program) => (
+        <div className="program-controls-row">
+          <div className="program-category-tabs">
             <button
-              className={selected.includes(program.id) ? "selected" : ""}
-              key={program.id}
-              onClick={() => toggle(program.id)}
+              className={`category-tab-btn ${activeCategory === "all" ? "active" : ""}`}
+              onClick={() => setActiveCategory("all")}
             >
-              <span>{selected.includes(program.id) ? <Check size={14} /> : <span className="empty-check" />}</span>
-              {program.name}
+              All Programs ({programs.length})
             </button>
-          ))}
-        </div>
+            <button
+              className={`category-tab-btn ${activeCategory === "ug" ? "active" : ""}`}
+              onClick={() => setActiveCategory("ug")}
+            >
+              B.Tech UG (4)
+            </button>
+            <button
+              className={`category-tab-btn ${activeCategory === "dsy" ? "active" : ""}`}
+              onClick={() => setActiveCategory("dsy")}
+            >
+              Lateral Entry DSY
+            </button>
+            <button
+              className={`category-tab-btn ${activeCategory === "pg" ? "active" : ""}`}
+              onClick={() => setActiveCategory("pg")}
+            >
+              M.Tech PG (2)
+            </button>
+            <button
+              className={`category-tab-btn ${activeCategory === "diploma" ? "active" : ""}`}
+              onClick={() => setActiveCategory("diploma")}
+            >
+              Diploma &amp; Cert (2)
+            </button>
+          </div>
 
-        <div className="compare-table">
-          <div className="compare-row compare-labels">
-            <div>Program</div>
-            {visible.map((p) => (
-              <div key={p.id}>
-                <strong>{p.name}</strong>
-              </div>
-            ))}
-          </div>
-          <div className="compare-row">
-            <div>Annual Tuition Fee</div>
-            {visible.map((p) => (
-              <div key={p.id}>
-                <span className="official-fee-chip">{formatCurrency(p.annual_tuition_fee)} / year</span>
-              </div>
-            ))}
-          </div>
-          <div className="compare-row">
-            <div>Level & Duration</div>
-            {visible.map((p) => (
-              <div key={p.id}>{p.level} · {p.duration}</div>
-            ))}
-          </div>
-          <div className="compare-row">
-            <div>Intake / Seats</div>
-            {visible.map((p) => (
-              <div key={p.id}>{p.intake_seats} seats</div>
-            ))}
-          </div>
-          <div className="compare-row">
-            <div>Core Focus</div>
-            {visible.map((p) => (
-              <div key={p.id}>{p.description}</div>
-            ))}
-          </div>
-          <div className="compare-row">
-            <div>Official Eligibility</div>
-            {visible.map((p) => (
-              <div key={p.id}>{p.eligibility}</div>
-            ))}
-          </div>
-          <div className="compare-row">
-            <div>Career Prospects</div>
-            {visible.map((p) => (
-              <div key={p.id}>{p.career_opportunities}</div>
-            ))}
+          <div className="program-search-box">
+            <Search size={15} color="#94A3B8" />
+            <input
+              type="text"
+              placeholder="Search branch, e.g. AI, Cloud, Cyber..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                style={{ background: "none", border: "none", padding: 0, cursor: "pointer", color: "#94A3B8" }}
+                onClick={() => setSearchQuery("")}
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="official-facts" style={{ marginTop: "32px" }}>
-          <span className="verified-mark">
-            <Check size={13} />
-          </span>
+        <div className="program-box-grid">
+          {filteredPrograms.map((p) => {
+            const isPopular = p.id === "btech-aiml" || p.id === "btech-cse-ai";
+            return (
+              <div key={p.id} className={`program-card-box ${isPopular ? "featured" : ""}`}>
+                {isPopular && <div className="program-card-badge">HIGH DEMAND 2026–27</div>}
+                <div className="program-card-head">
+                  <div className="program-type-tags">
+                    <span className="degree-pill">{p.degree}</span>
+                    <span className="duration-pill">{p.duration}</span>
+                  </div>
+                  <span className="intake-pill">
+                    <strong>{p.intake_seats}</strong> Seats
+                  </span>
+                </div>
+
+                <h3 className="program-card-title">{p.name}</h3>
+
+                <div className="program-fee-box">
+                  <div className="fee-primary-row">
+                    <span className="fee-label">Annual Tuition Fee</span>
+                    <span className="fee-amount">
+                      {formatCurrency(p.annual_tuition_fee)} <small>/ year</small>
+                    </span>
+                  </div>
+                  <div className="fee-scholarship-note">
+                    <Sparkles size={13} />
+                    <span>150+ Merit Scholarships up to 100% tuition waiver</span>
+                  </div>
+                </div>
+
+                <p className="program-card-desc">{p.description}</p>
+
+                <div className="program-detail-block">
+                  <span className="detail-block-title">Eligibility Criteria</span>
+                  <p className="detail-block-text">{p.eligibility}</p>
+                </div>
+
+                <div className="program-detail-block">
+                  <span className="detail-block-title">Key Career Opportunities</span>
+                  <p className="detail-block-roles">{p.career_opportunities}</p>
+                </div>
+
+                <div className="program-card-footer">
+                  <button
+                    className="program-apply-btn"
+                    onClick={() => onInquiry(p.name)}
+                  >
+                    Apply / Inquire for this Program <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="fee-guidelines-box">
+          <div className="guideline-shield-icon">
+            <ShieldCheck size={28} />
+          </div>
           <div>
-            <strong>Verified MGM University IICT Fee & Date Guidelines (2026–27)</strong>
-            <p>
-              • Application & MGMU-CET Fee: <strong>{facts.application_fee_domestic || "₹2,000"}</strong> (Domestic) / {facts.application_fee_international || "₹5,000"} (International)<br />
-              • Caution Money Deposit: <strong>{facts.caution_money_deposit || "₹5,000"}</strong> (100% Refundable) · Eligibility Fee: <strong>{facts.eligibility_fee || "₹5,000"}</strong><br />
-              • Current Application Deadline: <strong>{facts.application_deadline || "September 23, 2026"}</strong><br />
-              • Scholarships: {facts.scholarships}
-            </p>
-            <small>Helpline: {facts.helpline_phone_1} · Source: {facts.source_url}</small>
+            <h4>Verified MGM University IICT Fee &amp; Admission Guidelines (2026–27)</h4>
+            <div className="guidelines-grid">
+              <div className="guideline-item">
+                <CheckCircle2 size={15} color="#C05A21" />
+                <span>Application Fee: <b>{facts.application_fee_domestic || "₹2,000"}</b> (Domestic)</span>
+              </div>
+              <div className="guideline-item">
+                <CheckCircle2 size={15} color="#C05A21" />
+                <span>Caution Deposit: <b>{facts.caution_money_deposit || "₹5,000"}</b> (100% Refundable)</span>
+              </div>
+              <div className="guideline-item">
+                <CheckCircle2 size={15} color="#C05A21" />
+                <span>Eligibility Fee: <b>{facts.eligibility_fee || "₹5,000"}</b> (One-time)</span>
+              </div>
+              <div className="guideline-item">
+                <CheckCircle2 size={15} color="#C05A21" />
+                <span>Application Deadline: <b>{facts.application_deadline || "September 23, 2026"}</b></span>
+              </div>
+              <div className="guideline-item">
+                <CheckCircle2 size={15} color="#C05A21" />
+                <span>Admission Helpline: <b>{facts.helpline_phone_1 || "+91 940 449 4299"}</b></span>
+              </div>
+              <div className="guideline-item">
+                <CheckCircle2 size={15} color="#C05A21" />
+                <span>Office: <b>{facts.helpline_phone_2 || "0240-6481000 Ext. 2201"}</b></span>
+              </div>
+            </div>
           </div>
         </div>
       </main>
-      <Footer onStaff={() => {}} />
+      <Footer onStaff={onStaff} />
     </>
   );
 }
@@ -1488,20 +1576,27 @@ function Inquiry({ programs, onSubmit, onBack, onMyInquiry, onStaff, session }) 
   const [modalMode, setModalMode] = useState("edit");
   const [submitting, setSubmitting] = useState(false);
 
-  const [profile, setProfile] = useState({
-    name: "",
-    role: "Prospective Student",
-    email: "",
-    phone: "",
-    interested_program: "",
-    academic_background: "",
-    marks_12th: null,
-    marks_10th: null,
-    entrance_exam: "",
-    entrance_score: null,
-    location: "Maharashtra",
-    questions_noted: "",
-    progress: 0
+  const [profile, setProfile] = useState(() => {
+    let preselected = "";
+    try {
+      preselected = localStorage.getItem("iict_selected_prog") || "";
+      if (preselected) localStorage.removeItem("iict_selected_prog");
+    } catch {}
+    return {
+      name: "",
+      role: "Prospective Student",
+      email: "",
+      phone: "",
+      interested_program: preselected,
+      academic_background: "",
+      marks_12th: null,
+      marks_10th: null,
+      entrance_exam: "",
+      entrance_score: null,
+      location: "Maharashtra",
+      questions_noted: "",
+      progress: preselected ? 20 : 0
+    };
   });
 
   const handleResetConversation = () => {
@@ -3438,7 +3533,12 @@ function App() {
           programs={programs}
           facts={facts}
           onBack={() => navigateTo("home", "/")}
-          onInquiry={() => navigateTo("inquiry", "/inquiry")}
+          onInquiry={(progName) => {
+            if (progName && typeof progName === "string") {
+              try { localStorage.setItem("iict_selected_prog", progName); } catch {}
+            }
+            navigateTo("inquiry", "/inquiry");
+          }}
           onMyInquiry={() => setShowTrackerModal(true)}
           onStaff={() => navigateTo("staff-login", "/staff")}
           session={session}
