@@ -2241,6 +2241,315 @@ nav button.active{color:var(--green);font-weight:700;border-bottom:2px solid var
   }
 }
 
+/* ── Two Action Buttons on Program Cards ────────────────────────── */
+.program-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.card-direct-apply-btn {
+  background: #C05A21;
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(192, 90, 33, 0.2);
+}
+
+.card-direct-apply-btn:hover {
+  background: #A24816;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(192, 90, 33, 0.3);
+}
+
+.card-inquire-btn {
+  background: #001E32;
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-inquire-btn:hover {
+  background: #0A2942;
+  transform: translateY(-1px);
+}
+
+/* ── Card Compare Checkbox / Toggle ────────────────────────── */
+.card-compare-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #E2E8F0;
+  font-size: 11.5px;
+  color: #64748B;
+  cursor: pointer;
+  user-select: none;
+}
+
+.card-compare-toggle input {
+  accent-color: #C05A21;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.card-compare-toggle.checked {
+  color: #C05A21;
+  font-weight: 700;
+}
+
+/* ── View Switcher: Grid vs Compare ────────────────────────── */
+.view-switcher-group {
+  display: flex;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  padding: 3px;
+  border-radius: 9px;
+  gap: 3px;
+}
+
+.view-switcher-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748B;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.18s ease;
+}
+
+.view-switcher-btn:hover {
+  color: #001E32;
+}
+
+.view-switcher-btn.active {
+  background: #FFFFFF;
+  color: #001E32;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 30, 50, 0.08);
+}
+
+.compare-count-badge {
+  background: #C05A21;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+/* ── Side-by-Side Comparison Matrix Box ────────────────────────── */
+.compare-matrix-container {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 4px 20px rgba(0, 30, 50, 0.05);
+  margin-bottom: 40px;
+  overflow-x: auto;
+}
+
+.compare-matrix-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid #F1F5F9;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.compare-matrix-header h3 {
+  font: 700 20px 'Oxanium', sans-serif;
+  color: #001E32;
+  margin: 0;
+}
+
+.compare-picker-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.compare-chip {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  color: #475569;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.compare-chip:hover {
+  border-color: #C05A21;
+  color: #C05A21;
+}
+
+.compare-chip.selected {
+  background: #FFF5EE;
+  border-color: #C05A21;
+  color: #C05A21;
+  font-weight: 700;
+}
+
+.compare-matrix-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.compare-matrix-table th,
+.compare-matrix-table td {
+  padding: 16px 20px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.compare-matrix-table th.col-row-title {
+  background: #F8FAFC;
+  color: #001E32;
+  font-family: 'Oxanium', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  width: 170px;
+  min-width: 160px;
+  border-right: 1.5px solid #E2E8F0;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.compare-matrix-table th.col-program-head {
+  background: #FFFFFF;
+  border-bottom: 2px solid #001E32;
+  font-size: 15px;
+  color: #001E32;
+  min-width: 260px;
+}
+
+.compare-matrix-table th.col-program-head strong {
+  font: 700 16px/1.25 'Oxanium', sans-serif;
+  color: #001E32;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.compare-fee-tag {
+  font-family: 'Oxanium', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #C05A21;
+}
+
+.compare-fee-tag small {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748B;
+  font-family: 'Albert Sans', sans-serif;
+}
+
+.compare-matrix-table tr:hover td {
+  background: #FCFDFD;
+}
+
+/* Floating Compare Action Bar */
+.floating-compare-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #001E32;
+  color: #FFFFFF;
+  padding: 10px 22px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 10px 30px rgba(0, 30, 50, 0.35);
+  border: 1.5px solid #F1B51C;
+  z-index: 999;
+  animation: floatSlideUp 0.25s ease-out;
+}
+
+@keyframes floatSlideUp {
+  from { transform: translate(-50%, 40px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.floating-compare-bar span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.floating-compare-btn {
+  background: #C05A21;
+  color: #FFFFFF;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s ease;
+}
+
+.floating-compare-btn:hover {
+  background: #A24816;
+}
+
+.floating-clear-btn {
+  background: transparent;
+  color: #94A3B8;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px;
+  text-decoration: underline;
+}
+
+.floating-clear-btn:hover {
+  color: #FFFFFF;
+}
+
 
 
 
