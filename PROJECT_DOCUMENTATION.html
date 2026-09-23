@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MGM University IICT Admissions Portal - Project Documentation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@300;400;500;600;700;800&family=Oxanium:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #2563eb;
+      --accent: #f59e0b;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #0f172a;
+      --code-text: #e2e8f0;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Albert Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 15px;
+      padding-bottom: 80px;
+    }
+    
+    /* Top action toolbar */
+    .top-action-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #0f172a;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    
+    .top-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Oxanium', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      font-size: 15px;
+    }
+    
+    .top-brand span {
+      color: #f59e0b;
+      font-size: 13px;
+      background: rgba(245,158,11,0.15);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(245,158,11,0.3);
+    }
+    
+    .action-btn-group {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .btn-action {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    
+    .btn-action:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+    }
+    
+    .btn-action.secondary {
+      background: #334155;
+    }
+    .btn-action.secondary:hover {
+      background: #475569;
+    }
+    
+    .document-container {
+      max-width: 960px;
+      margin: 40px auto;
+      background: var(--card-bg);
+      padding: 60px 70px;
+      border-radius: 12px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+    }
+    
+    h1 {
+      font-family: 'Oxanium', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.3;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 3px solid var(--primary);
+    }
+    
+    h2 {
+      font-family: 'Oxanium', sans-serif;
+      font-size: 21px;
+      font-weight: 600;
+      color: #1e3a8a;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid #e2e8f0;
+    }
+    
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    
+    h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #334155;
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+    
+    p {
+      margin-bottom: 14px;
+      color: #334155;
+    }
+    
+    ul, ol {
+      margin: 10px 0 16px 26px;
+      color: #334155;
+    }
+    
+    li {
+      margin-bottom: 6px;
+    }
+    
+    hr {
+      border: none;
+      height: 1px;
+      background: #e2e8f0;
+      margin: 30px 0;
+    }
+    
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .code-block {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 18px 22px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 18px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.5;
+      border: 1px solid #334155;
+    }
+    
+    .code-block code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border: none;
+    }
+    
+    .table-responsive {
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+    
+    th {
+      background: #f8fafc;
+      color: #0f172a;
+      font-weight: 600;
+      padding: 12px 14px;
+      border: 1px solid #cbd5e1;
+    }
+    
+    td {
+      padding: 10px 14px;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+    }
+    
+    tr:nth-child(even) td {
+      background: #fbfcfe;
+    }
+    
+    a {
+      color: var(--primary-light);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    
+    @media print {
+      .top-action-bar {
+        display: none !important;
+      }
+      body {
+        background: #fff;
+        font-size: 12pt;
+      }
+      .document-container {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+        max-width: 100%;
+      }
+      h1 {
+        border-bottom: 2pt solid #000;
+      }
+      h2 {
+        border-bottom: 1pt solid #ccc;
+        page-break-after: avoid;
+      }
+      .code-block {
+        border: 1pt solid #aaa;
+        background: #f8f8f8 !important;
+        color: #000 !important;
+        page-break-inside: avoid;
+      }
+      table {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-action-bar">
+    <div class="top-brand">
+      🎓 MGM UNIVERSITY IICT
+      <span>2026–27 OFFICIAL DOC</span>
+    </div>
+    <div class="action-btn-group">
+      <button class="btn-action" onclick="window.print()">
+        🖨️ Download / Print as PDF
+      </button>
+      <button class="btn-action secondary" onclick="downloadMarkdown()">
+        📥 Download Markdown (.md)
+      </button>
+    </div>
+  </div>
+
+  <div class="document-container">
+    <h1>Comprehensive Project Documentation: MGM University IICT Admissions Portal (2026–27)</h1>
+<hr />
+<h2>1. Executive Summary & Project Overview</h2>
+<h3>1.1 What is the Project?</h3>
+<p>The <strong>MGM University IICT Admissions Portal</strong> is a modern, full-stack, cloud-native admissions management system and interactive digital counselling platform. It was specifically engineered for the <strong>Institute of Information and Communication Technology (IICT)</strong> at <strong>MGM University</strong>, located in Chhatrapati Sambhajinagar (Aurangabad), Maharashtra, India.</p>
+<p>Unlike traditional static academic websites that merely present brochure PDFs and passive forms, this platform serves as an <strong>end-to-end admissions funnel</strong>. It bridges the gap between prospective engineering candidates (and their parents) and university admission authorities through:</p>
+<ul>
+<li>An authoritative, verified digital brochure and dynamic program fee/eligibility showcase.</li>
+<li>An intelligent, conversational AI Admission Counsellor that interacts with students in natural language, explains complex academic pathways, and automatically extracts student lead profiles.</li>
+<li>A side-by-side program comparison matrix supporting multi-pathway side-by-side analysis (e.g., comparing <em>B.Tech AI & ML</em> vs. <em>B.Tech CSE-AI</em> vs. <em>B.Tech Data Science</em> vs. <em>B.Tech IT</em>).</li>
+<li>A privacy-preserving student inquiry tracker with instant reference ID status verification.</li>
+<li>A secure, role-based Counselor and Faculty CRM dashboard equipped with real-time KPI analytics, lead lifecycle tracking, counselor note-taking, one-click CSV exporting, and pre-formatted instant WhatsApp outreach templates.</li>
+<li>A Super Admin management module for staff access control, faculty role delegation, and academic catalog administration.</li>
+</ul>
+<hr />
+<h2>2. Project Aim, Vision & Core Objectives</h2>
+<h3>2.1 The Problem It Solves</h3>
+<p>1. <strong>Curriculum Confusion Among Engineering Aspirants:</strong></p>
+<p>   With specialized branches like Artificial Intelligence, Machine Learning, Data Science, and Classical CSE, students and parents are often confused about career outcomes, curriculum depth, and eligibility cutoffs. Traditional college websites offer dense 50-page PDF syllabi that students rarely read.</p>
+<p>2. <strong>Data Leakage & Student Privacy Vulnerabilities:</strong></p>
+<p>   Many college inquiry systems store student phone numbers, email addresses, and 12th marks openly or via third-party unsecured forms, resulting in spam from third-party agents. This project implements a <strong>zero-trust fail-closed security architecture</strong> where public users can never read raw student records.</p>
+<p>3. <strong>Counselor Inefficiency & Slow Follow-ups:</strong></p>
+<p>   Admissions staff usually rely on unorganized spreadsheets. Calling students without context or delayed response leads to lost admissions. The platform provides pre-packaged WhatsApp outreach templates (document verification, merit scholarship notification, campus tour invitations) and one-click phone dialers.</p>
+<p>4. <strong>Lack of Transparency in Fees & Quotas:</strong></p>
+<p>   Hidden costs or ambiguous fee breakdowns create mistrust. This portal displays officially verified tuition fees, caution deposits, eligibility fees, intake matrices, and scholarship criteria with clear timestamps and source links.</p>
+<h3>2.2 Primary Aims</h3>
+<ul>
+<li><strong>Empower Students:</strong> Offer instant, transparent, self-guided counseling, eligibility estimation, and program comparisons anytime, anywhere.</li>
+<li><strong>Streamline University Operations:</strong> Provide faculty and admissions counselors with a high-performance CRM tool to nurture, evaluate, and convert prospective candidates into enrolled students.</li>
+<li><strong>Ensure Enterprise-Grade Data Security:</strong> Protect applicant personal data via PostgreSQL Row-Level Security (RLS) and cryptographic access controls.</li>
+<li><strong>Provide 100% Availability:</strong> Built on serverless, Jamstack architecture with instant static asset delivery and robust offline/fallback resilience.</li>
+</ul>
+<hr />
+<h2>3. Key Features Breakdown</h2>
+<p>The system is architected into two primary operational surfaces: <strong>Public Student Facing</strong> and <strong>Internal Staff/Administrative Facing</strong>.</p>
+<pre class="code-block"><code class="language-">+-----------------------------------------------------------------------------------+
+|                        MGM UNIVERSITY IICT ADMISSIONS PORTAL                      |
++-----------------------------------------------------------------------------------+
+                                          |
+        +---------------------------------+---------------------------------+
+        |                                                                   |
+        v                                                                   v
++-------------------------------+                       +-------------------------------+
+|     PUBLIC STUDENT PORTAL     |                       |    INTERNAL STAFF/ADMIN CRM   |
++-------------------------------+                       +-------------------------------+
+| - Modern Hero &amp; Statistics    |                       | - Supabase Auth Staff Portal  |
+| - Program Boxes &amp; Filters     |                       | - Role-Based Access Control   |
+| - Side-by-Side Comparison     |                       | - Real-time Inquiries Board   |
+| - Conversational AI Counselor |                       | - Lead Status Lifecycle       |
+| - Privacy-Preserving Tracking |                       | - Counselor Notes &amp; Faculty   |
+| - Verified Facts &amp; Helplines  |                       | - WhatsApp Outreach Generator |
+| - Instant Eligibility Engine  |                       | - Analytics &amp; KPI Dashboard   |
++-------------------------------+                       | - CSV Data Export             |
+                                                        | - Super Admin Staff Manager   |
+                                                        +-------------------------------+</code></pre>
+<h3>3.1 Public Student Facing Experience</h3>
+<h4>A. Interactive Landing Page & University Branding</h4>
+<ul>
+<li><strong>Official Crest & NAAC 'A' Grade Branding:</strong> Integrated vector branding for MGM University and IICT with modern typography (<code>Albert Sans</code> and <code>Oxanium</code>).</li>
+<li><strong>Key Metric Badges:</strong> Real-time visibility into 310+ University Programs, 150+ Merit Scholarships, approved intake statistics, and 2026–27 admissions deadlines.</li>
+<li><strong>Direct Emergency & Admission Helplines:</strong> Click-to-call direct contact numbers (+91 940 449 4299, 0240-6481000) and verified email links.</li>
+</ul>
+<h4>B. Program Showcase & Dynamic Comparison Engine</h4>
+<ul>
+<li><strong>Multi-Level Categorization:</strong> Filter programs across <strong>B.Tech Undergraduate (4 years)</strong>, <strong>Lateral Entry / Direct Second Year (3 years)</strong>, <strong>M.Tech Postgraduate (2 years)</strong>, and <strong>Specialized Diplomas & Certificates</strong>.</li>
+<li><strong>Side-by-Side Pathway Comparison:</strong> Select up to 4 programs simultaneously to review:</li>
+<li>Annual Tuition Fees & formatted currency calculations.</li>
+<li>Approved seat intake capacity.</li>
+<li>Compulsory subject combinations and minimum cutoffs (45% for General, 40% for Maharashtra Reserved).</li>
+<li>Accepted entrance exams (MGMU-CET 2026, MHT-CET, JEE Main, PERA-CET).</li>
+<li>Specific career tracks (e.g., <em>AI Research Scientist</em>, <em>SDE</em>, <em>Cloud Architect</em>, <em>Data Strategist</em>).</li>
+<li><strong>Keyword Search:</strong> Instant live filtering by keywords like "AI", "Cloud", "Diploma", or "Data".</li>
+</ul>
+<h4>C. Intelligent Conversational AI Counsellor</h4>
+<ul>
+<li><strong>Interactive Chat Interface:</strong> Simulates a dedicated university admissions advisor.</li>
+<li><strong>Natural Language Parsing:</strong> Automatically extracts student information as they chat:</li>
+<li>Name, Email, Phone number</li>
+<li>Academic percentages (10th and 12th PCM)</li>
+<li>Entrance exam category & percentile/score</li>
+<li>Geographic location & intended engineering program</li>
+<li><strong>Live Profile Readiness Meter:</strong> A visual percentage meter (0% to 100%) showing profile completeness.</li>
+<li><strong>Instant Inquiry Submission:</strong> Submits lead data atomically through an isolated PostgreSQL stored procedure, generating an official Reference ID (e.g., <code>IICT-2026-XXXX</code>).</li>
+</ul>
+<h4>D. Privacy-Safe Public Inquiry Tracker</h4>
+<ul>
+<li><strong>Reference Code Search:</strong> Allows students to track their admission inquiry status without logging in.</li>
+<li><strong>Privacy Enforcement:</strong> Utilizes a secure database procedure (<code>get_my_inquiry_status</code>) that returns only public status indicators (<code>new</code>, <code>contacted</code>, <code>qualified</code>, <code>closed</code>) and timestamps, strictly preventing exposure of student contact numbers or academic marks to external scrapers.</li>
+</ul>
+<hr />
+<h3>3.2 Internal Staff, Counselor & Admin Experience</h3>
+<h4>A. Fail-Closed Authentication & Role System</h4>
+<ul>
+<li><strong>Supabase Authentication:</strong> Secure email/password login flow.</li>
+<li><strong>Strict Role Hierarchies:</strong></li>
+<li><strong>Super Admin:</strong> Full database read/write access, staff user provisioning, and catalog management.</li>
+<li><strong>Teacher / Counselor Admin:</strong> Access to assigned inquiries, lead qualification, counselor notes, and WhatsApp communication tools.</li>
+<li><strong>Unassigned / Pending:</strong> Fail-closed screen preventing unauthorized access even if an authenticated Supabase user logs in without an assigned role.</li>
+</ul>
+<h4>B. Counselor CRM & Lead Lifecycle Management</h4>
+<ul>
+<li><strong>Status Progression Pipeline:</strong> Update candidates across four clear admission stages:</li>
+</ul>
+<p>  1. <code>new</code> — Fresh inquiry submitted by candidate.</p>
+<p>  2. <code>contacted</code> — Counselor initiated phone/WhatsApp call.</p>
+<p>  3. <code>qualified</code> — Candidate verified for marks, entrance criteria, and seat allocation.</p>
+<p>  4. <code>closed</code> — Candidate admitted or enrolled.</p>
+<ul>
+<li><strong>Faculty Assignment:</strong> Super Admins and counselors can assign specific inquiries to designated faculty members for targeted follow-up.</li>
+<li><strong>Persistent Counselor Notes:</strong> In-line editing and instant saving of counselor discussion history and remarks.</li>
+</ul>
+<h4>C. Multi-Channel Outreach Tools</h4>
+<ul>
+<li><strong>Instant WhatsApp Communication Generator:</strong> Pre-crafted personalized templates populated dynamically with student name, reference code, chosen branch, and 12th marks:</li>
+</ul>
+<p>  1. <em>Eligibility & Document Verification</em> (High Priority)</p>
+<p>  2. <em>Merit Scholarship Offer</em> (Up to 100% tuition waiver calculation)</p>
+<p>  3. <em>Direct Seat Reservation Follow-up</em></p>
+<p>  4. <em>Campus Visit & Lab Tour Invitation</em></p>
+<ul>
+<li><strong>Click-to-Call & Click-to-Email:</strong> Native links enabling immediate outbound contact.</li>
+</ul>
+<h4>D. Advanced Filtering & CSV Data Export</h4>
+<ul>
+<li>Filter by admission status, selected engineering program, score tiers (Above 85%, 70%–85%, Below 70%), or faculty assignment ("Assigned to Me" vs "Unassigned").</li>
+<li><strong>One-Click UTF-8 CSV Export:</strong> Clean export of applicant lists, contact details, academic percentages, and counselor notes for university admission records.</li>
+</ul>
+<h4>E. Super Admin Staff Access Delegation</h4>
+<ul>
+<li>Super Admins can add and assign faculty members with specific roles directly through the dashboard UI.</li>
+</ul>
+<hr />
+<h2>4. Technical Architecture & System Design</h2>
+<pre class="code-block"><code class="language-">+------------------------------------------------------------------------------------+
+|                                FRONTEND ARCHITECTURE                               |
+|                                                                                    |
+|   +----------------------------------------------------------------------------+   |
+|   |                         React 18 Single Page App                           |   |
+|   |                                                                            |   |
+|   |   +--------------------+  +----------------------+  +------------------+   |   |
+|   |   |   Home Component   |  |   Compare Engine     |  | AI Inquiry Chat  |   |   |
+|   |   +--------------------+  +----------------------+  +------------------+   |   |
+|   |   +--------------------+  +----------------------+  +------------------+   |   |
+|   |   | Dashboard (CRM)    |  | Staff Authentication |  | Inquiry Tracker  |   |   |
+|   |   +--------------------+  +----------------------+  +------------------+   |   |
+|   +----------------------------------------------------------------------------+   |
+|                                         |                                          |
+|                          Vite 5 Bundler &amp; Vanilla Modern CSS                       |
++------------------------------------------------------------------------------------+
+                                          |
+                                   HTTPS / REST / WSS
+                                          |
++------------------------------------------------------------------------------------+
+|                             BACKEND-AS-A-SERVICE (Supabase)                        |
+|                                                                                    |
+|   +-----------------------+     +--------------------+     +-------------------+   |
+|   |     Supabase Auth     |     |   PostgreSQL 15+   |     | Security Definer  |   |
+|   |  (JWT &amp; Session Mgt)  |     |   Database Engine  |     | Stored Procedures |   |
+|   +-----------------------+     +--------------------+     +-------------------+   |
+|                                         |                                          |
+|            +-------------------------------------------------------+               |
+|            |             Row Level Security (RLS) Engine           |               |
+|            | - Public Can SELECT published programs &amp; facts        |               |
+|            | - Public CANNOT SELECT inquiries table                |               |
+|            | - Staff (is_staff) Can SELECT &amp; UPDATE inquiries      |               |
+|            | - Super Admin (is_super_admin) Can Manage Staff/Progs |               |
+|            +-------------------------------------------------------+               |
++------------------------------------------------------------------------------------+</code></pre>
+<h3>4.1 Architecture Highlights</h3>
+<p>1. <strong>Serverless Jamstack Model:</strong></p>
+<p>   No expensive custom backend server to maintain. The React client communicates directly with managed PostgreSQL via Supabase client libraries, maximizing performance, reducing latency, and drastically lowering operational overhead.</p>
+<p>2. <strong>Fail-Closed Security Posture:</strong></p>
+<p>   If a user visits <code>/staff</code> or inspects network queries, they cannot access raw leads unless authenticated with a verified role in <code>public.staff_profiles</code>. The database itself rejects all unauthorized queries at the PostgreSQL kernel level via Row Level Security (RLS).</p>
+<p>3. <strong>RPC Encapsulation for Public Writes:</strong></p>
+<p>   Public inquiries are inserted via the <code>public.submit_inquiry(...)</code> <code>SECURITY DEFINER</code> function. The table <code>public.inquiries</code> has no public <code>SELECT</code> or <code>INSERT</code> policy, preventing automated scrapers from stealing applicant records.</p>
+<p>4. <strong>Resilient Local Fallback:</strong></p>
+<p>   If Supabase environment keys are not configured or during cloud downtime, the portal gracefully falls back to verified static programs and fact constants, allowing the public brochure and UI to remain functional.</p>
+<hr />
+<h2>5. Technology Stack, Languages & Tools</h2>
+<h3>5.1 Programming & Markup Languages</h3>
+<div class="table-responsive"><table>
+<thead><tr><th>Technology</th><th>Category</th><th>Purpose in Project</th></tr></thead>
+<tbody>
+<tr><td><strong>JavaScript (ES Modules)</strong></td><td>Programming Language</td><td>Core client-side business logic, state machines, and interactions.</td></tr>
+<tr><td><strong>JSX</strong></td><td>UI Syntax Extension</td><td>Declarative component structure combining HTML and JavaScript.</td></tr>
+<tr><td><strong>HTML5</strong></td><td>Markup Language</td><td>Semantic document structure, SEO tags, responsive viewports, and fonts.</td></tr>
+<tr><td><strong>CSS3 (Vanilla Modern)</strong></td><td>Styling Engine</td><td>Responsive layouts, CSS variables, glassmorphism, flexbox/grid, and micro-interactions.</td></tr>
+<tr><td><strong>SQL (PL/pgSQL)</strong></td><td>Database Language</td><td>Schema migrations, Row Level Security policies, indexes, and stored procedures.</td></tr>
+</tbody></table></div>
+<h3>5.2 Libraries & Frameworks</h3>
+<div class="table-responsive"><table>
+<thead><tr><th>Library / Package</th><th>Version</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><strong>React</strong></td><td><code>18.x</code></td><td>Declarative UI rendering, hooks (<code>useState</code>, <code>useEffect</code>, <code>useRef</code>), and component lifecycle.</td></tr>
+<tr><td><strong>React DOM</strong></td><td><code>18.x</code></td><td>DOM rendering target for the React application.</td></tr>
+<tr><td><strong>Vite</strong></td><td><code>5.x</code></td><td>High-performance developer tooling, lightning-fast HMR, and optimized production bundler.</td></tr>
+<tr><td><strong>@vitejs/plugin-react</strong></td><td>Latest</td><td>Official Babel/React integration for Vite.</td></tr>
+<tr><td><strong>Lucide React</strong></td><td>Latest</td><td>Modern, scalable feather-style SVG icon system for university interfaces.</td></tr>
+<tr><td><strong>@supabase/supabase-js</strong></td><td>Latest</td><td>Official isomorphic client for Supabase authentication, queries, and stored procedures.</td></tr>
+</tbody></table></div>
+<h3>5.3 Database & Cloud Infrastructure</h3>
+<div class="table-responsive"><table>
+<thead><tr><th>Infrastructure Layer</th><th>Platform / Tool</th><th>Details</th></tr></thead>
+<tbody>
+<tr><td><strong>Relational Database</strong></td><td>PostgreSQL 15+ (Supabase)</td><td>ACID compliance, JSONB support, relational constraints, foreign keys, and indexes.</td></tr>
+<tr><td><strong>Identity & Authentication</strong></td><td>Supabase Auth</td><td>Cryptographic password hashing, secure JWT tokens, and session persistence.</td></tr>
+<tr><td><strong>Data Protection</strong></td><td>PostgreSQL Row Level Security (RLS)</td><td>Declarative access control rules enforced at the database row level.</td></tr>
+<tr><td><strong>Hosting & Deployment</strong></td><td>Vercel</td><td>Global edge CDN, automated HTTPS, rewrite configurations for SPA routing (<code>vercel.json</code>).</td></tr>
+<tr><td><strong>Typography</strong></td><td>Google Fonts</td><td>Web typography: <code>Albert Sans</code> (clean sans-serif) and <code>Oxanium</code> (futuristic tech accent).</td></tr>
+</tbody></table></div>
+<hr />
+<h2>6. Complete Database Schema & Data Models</h2>
+<h3>6.1 Database Tables</h3>
+<pre class="code-block"><code class="language-">                    +------------------------+
+                    |      auth.users        |
+                    | (Supabase Auth Engine) |
+                    +------------------------+
+                                |
+             +------------------+------------------+
+             | 1:1                                 | 1:N
+             v                                     v
++--------------------------+             +--------------------------+
+|  public.staff_profiles   |             |     public.inquiries     |
++--------------------------+             +--------------------------+
+| user_id (PK, FK)         |             | id (PK, UUID)            |
+| email                    |             | reference_code (UNIQUE)  |
+| role (super_admin/staff) |             | student_name             |
+| display_name             |             | email, phone             |
+| department               |             | program_interest         |
+| created_by (FK)          |             | marks_10th, marks_12th   |
+| created_at               |             | entrance_exam, score     |
++--------------------------+             | location, question       |
+             |                           | status (new/contacted...) |
+             |                           | counselor_notes          |
+             +--------------------------&gt;| assigned_to (FK)         |
+                     assigned faculty    | created_at, updated_at   |
+                                         +--------------------------+
+
++--------------------------+             +--------------------------+
+|     public.programs      |             |  public.admission_facts  |
++--------------------------+             +--------------------------+
+| id (PK, text)            |             | key (PK, text)           |
+| name, degree, level      |             | value (text)             |
+| duration                 |             | category                 |
+| annual_tuition_fee       |             | source_url               |
+| intake_seats             |             | verified_at              |
+| description, eligibility |             | published (boolean)      |
+| career_opportunities     |             +--------------------------+
+| published, academic_year |
++--------------------------+</code></pre>
+<h4>Table: <code>public.programs</code></h4>
+<p>Stores the official academic program catalog for the university.</p>
+<ul>
+<li><code>id</code> (<code>text</code>, Primary Key): Machine-readable identifier (e.g., <code>'btech-aiml'</code>).</li>
+<li><code>name</code> (<code>text</code>): Full academic title.</li>
+<li><code>degree</code> (<code>text</code>): Academic degree designation (<code>B.Tech</code>, <code>M.Tech</code>, <code>Diploma</code>).</li>
+<li><code>level</code> (<code>text</code>): Degree level (<code>Undergraduate</code>, <code>Postgraduate</code>, <code>Diploma</code>).</li>
+<li><code>duration</code> (<code>text</code>): Duration of study (e.g., <code>'4 years'</code>).</li>
+<li><code>annual_tuition_fee</code> (<code>numeric(10,2)</code>): Approved annual tuition fee.</li>
+<li><code>intake_seats</code> (<code>integer</code>): Official seat intake capacity.</li>
+<li><code>description</code> (<code>text</code>): Comprehensive curriculum overview.</li>
+<li><code>eligibility</code> (<code>text</code>): Compulsory subject requirements and minimum percentage cutoffs.</li>
+<li><code>career_opportunities</code> (<code>text</code>): Core job roles and industrial career tracks.</li>
+<li><code>published</code> (<code>boolean</code>): Toggle for public visibility.</li>
+<li><code>source_url</code> (<code>text</code>): Verifiable citation link to university catalog.</li>
+<li><code>academic_year</code> (<code>text</code>): Current batch tag (<code>2026–27</code>).</li>
+</ul>
+<h4>Table: <code>public.admission_facts</code></h4>
+<p>Stores institutional facts, fees, deadlines, and contact information.</p>
+<ul>
+<li><code>key</code> (<code>text</code>, Primary Key): Key identifier (e.g., <code>'application_deadline'</code>).</li>
+<li><code>value</code> (<code>text</code>): Value or description.</li>
+<li><code>category</code> (<code>text</code>): Categorization (<code>general</code>, <code>dates</code>, <code>fees</code>, <code>scholarships</code>, <code>contact</code>).</li>
+<li><code>source_url</code> (<code>text</code>): Verification URL.</li>
+<li><code>published</code> (<code>boolean</code>): Public availability toggle.</li>
+</ul>
+<h4>Table: <code>public.inquiries</code></h4>
+<p>Stores student admissions inquiries and profile information.</p>
+<ul>
+<li><code>id</code> (<code>uuid</code>, Primary Key): Auto-generated unique identifier.</li>
+<li><code>reference_code</code> (<code>text</code>, Unique): Publicly trackable reference number (<code>IICT-2026-XXXX</code>).</li>
+<li><code>student_name</code> (<code>text</code>): Candidate's full name.</li>
+<li><code>email</code> (<code>text</code>): Contact email.</li>
+<li><code>phone</code> (<code>text</code>): Contact phone number.</li>
+<li><code>program_interest</code> (<code>text</code>): Selected academic program.</li>
+<li><code>course_category</code> (<code>text</code>): Category (<code>UG</code>, <code>PG</code>, <code>Diploma</code>, <code>DSY</code>).</li>
+<li><code>marks_10th</code> (<code>numeric(5,2)</code>): 10th standard percentage.</li>
+<li><code>marks_12th</code> (<code>numeric(5,2)</code>): 12th standard (HSC / PCM) aggregate.</li>
+<li><code>entrance_exam</code> (<code>text</code>): Name of qualifying exam (MGMU-CET, MHT-CET, JEE Main).</li>
+<li><code>entrance_score</code> (<code>numeric(6,2)</code>): Exam score or percentile.</li>
+<li><code>location</code> (<code>text</code>): Student's home district or state.</li>
+<li><code>question</code> (<code>text</code>): Questions, transcript notes, or specific requests.</li>
+<li><code>consent_to_contact</code> (<code>boolean</code>): Digital communication consent.</li>
+<li><code>status</code> (<code>text</code>): Lifecycle stage (<code>new</code>, <code>contacted</code>, <code>qualified</code>, <code>closed</code>).</li>
+<li><code>counselor_notes</code> (<code>text</code>): Internal remarks entered by faculty.</li>
+<li><code>assigned_to</code> (<code>uuid</code>, Foreign Key to <code>auth.users</code>): Assigned counselor/faculty ID.</li>
+<li><code>created_at</code> / <code>updated_at</code> (<code>timestamptz</code>): Timestamps.</li>
+</ul>
+<h4>Table: <code>public.staff_profiles</code></h4>
+<p>Maintains internal staff roles and access levels.</p>
+<ul>
+<li><code>user_id</code> (<code>uuid</code>, Primary Key, Foreign Key to <code>auth.users.id</code>): Authentication link.</li>
+<li><code>email</code> (<code>text</code>): Registered staff email address.</li>
+<li><code>role</code> (<code>text</code>): System role (<code>super_admin</code>, <code>teacher</code>, <code>counsellor</code>, <code>manager</code>, <code>admin</code>).</li>
+<li><code>display_name</code> (<code>text</code>): Name shown on dashboards and assignments.</li>
+<li><code>department</code> (<code>text</code>): Institutional unit (e.g., <code>'IICT Faculty'</code>).</li>
+<li><code>created_by</code> (<code>uuid</code>): Super Admin who authorized the account.</li>
+<li><code>created_at</code> (<code>timestamptz</code>): Authorization timestamp.</li>
+</ul>
+<hr />
+<h3>6.2 Stored Procedures & Database Functions</h3>
+<p>1. <code>public.is_staff()</code> (<code>RETURNS boolean</code>): Evaluates whether <code>auth.uid()</code> exists in <code>staff_profiles</code>.</p>
+<p>2. <code>public.is_super_admin()</code> (<code>RETURNS boolean</code>): Evaluates whether <code>auth.uid()</code> has role <code>'super_admin'</code>.</p>
+<p>3. <code>public.submit_inquiry(...)</code> (<code>RETURNS text</code>): Validates and inserts applicant records atomically; returns the new reference code.</p>
+<p>4. <code>public.get_my_inquiry_status(p_reference_code text)</code> (<code>RETURNS json</code>): Securely queries and returns applicant reference status for the public tracker without exposing sensitive data.</p>
+<p>5. <code>public.grant_teacher_access(...)</code> (<code>RETURNS text</code>): Super-admin-only function to assign staff roles.</p>
+<hr />
+<h2>7. Security, Privacy & Data Integrity</h2>
+<ul>
+<li><strong>Zero-Trust RLS Policies:</strong></li>
+<li>The <code>inquiries</code> table has no public <code>SELECT</code> or <code>INSERT</code> permissions. Only authenticated staff with verified roles can view or modify leads.</li>
+<li><strong>Fail-Closed Role Guards:</strong></li>
+<li>If a staff member is authenticated via Supabase Auth but not listed in <code>public.staff_profiles</code>, access to lead records is immediately denied.</li>
+<li><strong>Public Query Isolation:</strong></li>
+<li>The public tracker function <code>get_my_inquiry_status</code> returns only non-sensitive status information, preventing brute-force data harvesting.</li>
+<li><strong>SQL Injection Defense:</strong></li>
+<li>All database interactions use parameterized PostgreSQL queries and stored procedures, preventing SQL injection vulnerabilities.</li>
+</ul>
+<hr />
+<h2>8. Areas for Improvement (Codebase Analysis)</h2>
+<p>While the application is functional and secure, the following structural improvements will enhance code maintainability and scalability:</p>
+<h3>8.1 Component Architecture Modularization</h3>
+<ul>
+<li><strong>Current State:</strong> <code>src/main.jsx</code> is currently a monolithic file with <strong>~3,974 lines of code</strong> containing all sub-components (<code>Home</code>, <code>Compare</code>, <code>Inquiry</code>, <code>Dashboard</code>, <code>StaffLogin</code>, <code>MyInquiryModal</code>).</li>
+<li><strong>Recommended Refactoring:</strong> Break down <code>main.jsx</code> into a standard modular architecture:</li>
+</ul>
+<pre class="code-block"><code class="language-">  src/
+  ├── components/
+  │   ├── common/         (Header.jsx, Footer.jsx, Logo.jsx)
+  │   ├── compare/        (CompareTable.jsx, ProgramCard.jsx, FilterBar.jsx)
+  │   ├── inquiry/        (ChatBot.jsx, ProfileSummary.jsx, TrackerModal.jsx)
+  │   └── dashboard/      (KpiCards.jsx, LeadsTable.jsx, WhatsAppModal.jsx, StaffAdmin.jsx)
+  ├── hooks/              (usePrograms.js, useInquiries.js, useAuth.js)
+  ├── context/            (AuthContext.jsx)
+  ├── lib/                (supabase.js, formatters.js, constants.js)
+  └── main.jsx            (Root router and entry point)</code></pre>
+<h3>8.2 State Management & Client-Side Routing</h3>
+<ul>
+<li><strong>Current State:</strong> State is managed via local <code>useState</code> lifted to the root component, and routing uses custom browser history wrappers.</li>
+<li><strong>Recommended Upgrade:</strong></li>
+<li>Integrate <strong>React Router v6</strong> (<code>createBrowserRouter</code>) for deep-linking (e.g., <code>/compare</code>, <code>/inquiry</code>, <code>/dashboard</code>, <code>/track/:refCode</code>).</li>
+<li>Introduce <strong>Zustand</strong> or <strong>TanStack Query (React Query)</strong> to handle caching, background data refetching, and state deduplication.</li>
+</ul>
+<h3>8.3 TypeScript Migration</h3>
+<ul>
+<li><strong>Current State:</strong> Plain JavaScript with dynamic typing.</li>
+<li><strong>Recommended Upgrade:</strong> Migrate to <strong>TypeScript</strong> (<code>.tsx</code>) with auto-generated Supabase database types (<code>supabase gen types typescript</code>) to provide complete type safety across all database queries.</li>
+</ul>
+<h3>8.4 Automated Testing</h3>
+<ul>
+<li><strong>Current State:</strong> Manual testing.</li>
+<li><strong>Recommended Upgrade:</strong> Implement a testing suite:</li>
+<li><strong>Vitest & React Testing Library</strong> for component unit tests (e.g., fee formatting, filter accuracy).</li>
+<li><strong>Playwright</strong> for end-to-end testing of the full student inquiry and staff login workflows.</li>
+</ul>
+<hr />
+<h2>9. Future Upgrades & Strategic Roadmap</h2>
+<p>Here are the highest-impact future enhancements planned for the platform:</p>
+<pre class="code-block"><code class="language-">+------------------------------------------------------------------------------------+
+|                         FUTURE UPGRADES &amp; PRODUCT ROADMAP                          |
++------------------------------------------------------------------------------------+
+       |
+       +---&gt; [Phase 1: Communication Automation]
+       |     • Official WhatsApp Cloud API (Automated Chatbot &amp; Status Updates)
+       |     • Twilio / Fast2SMS OTP verification for candidate mobile numbers
+       |     • Automated transactional confirmation emails via Resend / SendGrid
+       |
+       +---&gt; [Phase 2: Online Payments &amp; Seat Booking]
+       |     • Razorpay / PayU / Easebuzz Payment Gateway integration
+       |     • Instant online collection of the ₹2,000 application / MGMU-CET fee
+       |     • Digital receipt generation and downloadable provisional admission slips
+       |
+       +---&gt; [Phase 3: AI Document Processing &amp; Verification]
+       |     • OCR Scorecard Scanner (Auto-extract 10th/12th marks from marksheets)
+       |     • Automated eligibility validation against Maharashtra CET cell rules
+       |     • Cloudinary / Supabase Storage integration for document archiving
+       |
+       +---&gt; [Phase 4: Multilingual &amp; Accessibility Support]
+       |     • Full Marathi (मराठी) and Hindi (हिंदी) localization
+       |     • Multilingual AI counselling for rural and regional aspirants
+       |     • Voice-based AI counsellor interface using Web Speech API
+       |
+       +---&gt; [Phase 5: Institutional Intelligence &amp; Predictive Analytics]
+       |     • Machine Learning lead scoring (predicting enrollment probability)
+       |     • Conversion funnel metrics (traffic -&gt; inquiry -&gt; qualified -&gt; enrolled)
+       |     • Counselor performance benchmarking &amp; response-time tracking</code></pre>
+<hr />
+<h2>10. Summary & Impact Assessment</h2>
+<div class="table-responsive"><table>
+<thead><tr><th>Dimension</th><th>Previous Status</th><th>With IICT Admissions Portal</th></tr></thead>
+<tbody>
+<tr><td><strong>Information Delivery</strong></td><td>Static, dense PDFs and fragmented notices</td><td>Interactive, searchable program matrix with transparent fee structures</td></tr>
+<tr><td><strong>Student Inquiries</strong></td><td>Unsecured generic forms or paper inquiries</td><td>Conversational AI guidance with instant reference code generation</td></tr>
+<tr><td><strong>Data Security & Privacy</strong></td><td>Exposed spreadsheets vulnerable to data leaks</td><td>Zero-Trust PostgreSQL Row-Level Security (RLS) with role separation</td></tr>
+<tr><td><strong>Counselor Productivity</strong></td><td>Manual calls without structured context</td><td>Centralized CRM with status pipelines, counselor notes, and WhatsApp templates</td></tr>
+<tr><td><strong>Scalability</strong></td><td>Server-dependent, prone to traffic crashes</td><td>Serverless Jamstack on global edge CDN with high concurrency capacity</td></tr>
+</tbody></table></div>
+<hr />
+<p><em>Document compiled for MGM University, Institute of Information and Communication Technology (IICT).</em>  </p>
+<p><em>Academic Cycle: 2026–27 | Chhatrapati Sambhajinagar (Aurangabad), Maharashtra.</em></p>
+
+  </div>
+
+  <script>
+    function downloadMarkdown() {
+      window.location.href = './PROJECT_DOCUMENTATION.md';
+    }
+  </script>
+</body>
+</html>

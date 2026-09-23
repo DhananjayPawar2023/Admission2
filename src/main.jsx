@@ -2610,8 +2610,11 @@ function Dashboard({ session, onExit }) {
   const [error, setError] = useState("");
   const [newTeacherEmail, setNewTeacherEmail] = useState("");
   const [newTeacherName, setNewTeacherName] = useState("");
+  const [newTeacherRole, setNewTeacherRole] = useState("teacher");
+  const [newTeacherDept, setNewTeacherDept] = useState("IICT Faculty");
   const [granting, setGranting] = useState(false);
   const [grantMsg, setGrantMsg] = useState("");
+  const [revokingEmail, setRevokingEmail] = useState(null);
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -2630,22 +2633,72 @@ function Dashboard({ session, onExit }) {
   useEffect(() => {
     if (!supabase) return;
 
-    // Check current staff profile role
-    supabase
-      .from("staff_profiles")
-      .select("role, display_name")
-      .eq("user_id", session.user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.role) {
-          setUserRole(data.role);
-        } else if (session?.user?.email === "dp844771@gmail.com") {
-          setUserRole("super_admin");
-        } else {
-          setUserRole(null);
-          setError("Your account does not have staff permissions yet. Please contact the Admissions Directorate.");
+    // Check & sync staff profile role
+    const verifyAndSyncRole = async () => {
+      let roleFound = null;
+
+      // 1. Try serverless /api/sync-staff endpoint (powered by service_role key)
+      try {
+        const token = session?.access_token;
+        if (token) {
+          const apiRes = await fetch("/api/sync-staff", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            }
+          });
+          if (apiRes.ok) {
+            const apiData = await apiRes.json();
+            if (apiData?.profile?.role) {
+              roleFound = apiData.profile.role;
+            }
+            if (apiData?.staffList && apiData.staffList.length > 0) {
+              setStaffList(apiData.staffList);
+            }
+          }
         }
-      });
+      } catch {
+        // Fallback if /api/ not reached
+      }
+
+      // 2. Try claim_or_sync_staff_profile RPC if available
+      if (!roleFound) {
+        try {
+          const { data: syncRes } = await supabase.rpc("claim_or_sync_staff_profile");
+          if (syncRes && syncRes.status === "active") {
+            roleFound = syncRes.role;
+          }
+        } catch {}
+      }
+
+      // 3. Query staff_profiles table directly
+      if (!roleFound) {
+        const { data: profile } = await supabase
+          .from("staff_profiles")
+          .select("role, display_name, user_id")
+          .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
+          .maybeSingle();
+
+        if (profile?.role) {
+          roleFound = profile.role;
+          if (profile.user_id !== session.user.id) {
+            await supabase.from("staff_profiles").update({ user_id: session.user.id }).eq("email", session.user.email);
+          }
+        } else if (session?.user?.email === "dp844771@gmail.com") {
+          roleFound = "super_admin";
+        }
+      }
+
+      if (roleFound) {
+        setUserRole(roleFound);
+      } else {
+        setUserRole(null);
+        setError("Your account does not have staff permissions yet. Please contact the Admissions Directorate.");
+      }
+    };
+
+    verifyAndSyncRole();
 
     // Load inquiries (protected by RLS)
     supabase
@@ -2671,7 +2724,7 @@ function Dashboard({ session, onExit }) {
       .select("*")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (data) setStaffList(data);
+        if (data && data.length > 0) setStaffList(data);
       });
   }, [session]);
 
@@ -2728,34 +2781,116 @@ function Dashboard({ session, onExit }) {
 
   const handleGrantTeacher = async (e) => {
     e.preventDefault();
-    if (!newTeacherEmail || !newTeacherName) return;
+    const cleanEmail = newTeacherEmail.toLowerCase().trim();
+    const cleanName = newTeacherName.trim();
+    if (!cleanEmail || !cleanName) return;
 
     setGranting(true);
     setGrantMsg("");
 
-    const newStaffObj = {
-      user_id: crypto.randomUUID(),
-      email: newTeacherEmail.toLowerCase().trim(),
-      display_name: newTeacherName.trim(),
-      role: "teacher",
-      department: "IICT Faculty",
-      created_at: new Date().toISOString()
-    };
+    // 1. Primary: Serverless API Endpoint (uses SUPABASE_SERVICE_ROLE_KEY to bypass RLS)
+    try {
+      const token = session?.access_token;
+      const apiResponse = await fetch("/api/grant-staff", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : ""
+        },
+        body: JSON.stringify({
+          email: cleanEmail,
+          displayName: cleanName,
+          role: newTeacherRole,
+          department: newTeacherDept
+        })
+      });
 
-    if (supabase) {
-      const { error: insertError } = await supabase.from("staff_profiles").insert([newStaffObj]);
-      if (insertError) {
-        setGrantMsg(insertError.message.includes("foreign key")
-          ? "Note: The teacher must register an account first with this email."
-          : `Notice: ${insertError.message}`);
-      } else {
-        setGrantMsg("Teacher access granted successfully!");
-        setStaffList((prev) => [newStaffObj, ...prev]);
+      const resJson = await apiResponse.json();
+      if (apiResponse.ok && resJson.success) {
+        setGrantMsg(resJson.message || "Staff access granted successfully!");
+        if (resJson.user) {
+          setStaffList((prev) => {
+            const filtered = prev.filter((s) => s.email !== cleanEmail);
+            return [
+              {
+                user_id: resJson.user.id,
+                email: cleanEmail,
+                display_name: cleanName,
+                role: newTeacherRole,
+                department: newTeacherDept
+              },
+              ...filtered
+            ];
+          });
+        }
         setNewTeacherEmail("");
         setNewTeacherName("");
+        setGranting(false);
+        return;
+      } else if (apiResponse.status === 403) {
+        setGrantMsg(`Permission denied: ${resJson.error || "Only Super Admin can grant staff access."}`);
+        setGranting(false);
+        return;
+      }
+    } catch {
+      // If serverless endpoint is not reachable locally, continue to direct database RPC fallback
+    }
+
+    // 2. Direct Database Fallback: call grant_staff_access_by_email RPC
+    if (supabase) {
+      try {
+        const { data: rpcRes, error: rpcErr } = await supabase.rpc("grant_staff_access_by_email", {
+          p_email: cleanEmail,
+          p_display_name: cleanName,
+          p_role: newTeacherRole,
+          p_department: newTeacherDept
+        });
+
+        if (!rpcErr && rpcRes) {
+          setGrantMsg(rpcRes.message || "Staff access granted successfully!");
+          const { data: refreshed } = await supabase
+            .from("staff_profiles")
+            .select("*")
+            .order("created_at", { ascending: false });
+          if (refreshed) setStaffList(refreshed);
+          setNewTeacherEmail("");
+          setNewTeacherName("");
+          setGranting(false);
+          return;
+        }
+
+        const errMsg = rpcErr?.message || "";
+        if (errMsg.includes("grant_staff_access_by_email") || errMsg.includes("function") || errMsg.includes("not found")) {
+          setGrantMsg("Notice: Please apply '002_fix_staff_access.sql' in your Supabase SQL Editor once to activate instant database-level permissions.");
+        } else {
+          setGrantMsg(`Notice: ${errMsg}`);
+        }
+      } catch (err) {
+        setGrantMsg(`Notice: ${err.message || "Error granting access"}`);
       }
     }
+
     setGranting(false);
+  };
+
+  const handleRevokeStaff = async (emailToRevoke) => {
+    if (!emailToRevoke || emailToRevoke === "dp844771@gmail.com") return;
+    if (!confirm(`Are you sure you want to revoke staff access for ${emailToRevoke}?`)) return;
+
+    setRevokingEmail(emailToRevoke);
+    try {
+      const { error: rpcErr } = await supabase.rpc("revoke_staff_access", { p_email: emailToRevoke });
+      if (!rpcErr) {
+        setStaffList((prev) => prev.filter((s) => s.email !== emailToRevoke));
+      } else {
+        await supabase.from("staff_profiles").delete().eq("email", emailToRevoke);
+        setStaffList((prev) => prev.filter((s) => s.email !== emailToRevoke));
+      }
+    } catch {
+      // ignore
+    } finally {
+      setRevokingEmail(null);
+    }
   };
 
   // ── KPI Analytics Computations ─────────────────────────────
@@ -3465,13 +3600,13 @@ function Dashboard({ session, onExit }) {
       {activeTab === "teachers" && userRole === "super_admin" && (
         <div className="teacher-management-grid">
           <div className="grant-teacher-card">
-            <h3>Grant Teacher Access</h3>
+            <h3>Grant Staff &amp; Faculty Access</h3>
             <p>
-              As Super Admin, you can grant faculty teachers access to review student profiles, track lead status, and conduct admissions counselling.
+              As Super Admin, you can grant faculty teachers and counsellors access to review student profiles, track lead status, update notes, and conduct admissions counselling.
             </p>
             <form onSubmit={handleGrantTeacher} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <label style={{ fontSize: "11.5px", fontWeight: 600, color: "#374151" }}>
-                Teacher Email
+                Staff / Teacher Email
                 <input
                   type="email"
                   value={newTeacherEmail}
@@ -3494,38 +3629,89 @@ function Dashboard({ session, onExit }) {
                 />
               </label>
 
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <label style={{ fontSize: "11.5px", fontWeight: 600, color: "#374151" }}>
+                  Assigned Role
+                  <select
+                    value={newTeacherRole}
+                    onChange={(e) => setNewTeacherRole(e.target.value)}
+                    style={{ width: "100%", marginTop: "4px", padding: "8px 10px", border: "1px solid #d1d5db", borderRadius: "6px", background: "#fff" }}
+                  >
+                    <option value="teacher">Teacher / Faculty</option>
+                    <option value="counsellor">Admissions Counsellor</option>
+                    <option value="admin">Admissions Admin</option>
+                  </select>
+                </label>
+
+                <label style={{ fontSize: "11.5px", fontWeight: 600, color: "#374151" }}>
+                  Department / Unit
+                  <input
+                    type="text"
+                    value={newTeacherDept}
+                    onChange={(e) => setNewTeacherDept(e.target.value)}
+                    placeholder="IICT Faculty"
+                    style={{ width: "100%", marginTop: "4px", padding: "8px 10px", border: "1px solid #d1d5db", borderRadius: "6px" }}
+                  />
+                </label>
+              </div>
+
               <button
                 type="submit"
                 className="primary-button"
                 disabled={granting}
                 style={{ marginTop: "8px", justifyContent: "center" }}
               >
-                <UserPlus size={15} /> {granting ? "Granting..." : "Grant Teacher Access"}
+                <UserPlus size={15} /> {granting ? "Granting..." : "Grant Staff Access"}
               </button>
-              {grantMsg && <small style={{ color: "#C05A21", fontWeight: 600 }}>{grantMsg}</small>}
+              {grantMsg && (
+                <div style={{ padding: "8px 12px", borderRadius: "6px", background: grantMsg.includes("granted") || grantMsg.includes("recorded") ? "#ecfdf5" : "#fff7ed", border: "1px solid " + (grantMsg.includes("granted") || grantMsg.includes("recorded") ? "#a7f3d0" : "#fed7aa"), color: grantMsg.includes("granted") || grantMsg.includes("recorded") ? "#065f46" : "#9a3412", fontSize: "12px", fontWeight: 600 }}>
+                  {grantMsg}
+                </div>
+              )}
             </form>
           </div>
 
           <div className="teacher-table-card">
             <div className="teacher-table-header">
-              <strong>Authorized Faculty & Staff ({staffList.length})</strong>
+              <strong>Authorized Faculty &amp; Staff ({staffList.length})</strong>
               <small style={{ color: "#6b7280" }}>Super Admin Managed</small>
             </div>
             {staffList.length > 0 ? (
               staffList.map((staff) => (
-                <div key={staff.user_id} className="teacher-list-row">
+                <div key={staff.user_id || staff.email} className="teacher-list-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div className="teacher-meta-col">
                     <strong>{staff.display_name}</strong>
                     <small>{staff.email || "Faculty member"} · {staff.department || "IICT"}</small>
                   </div>
-                  <span className={staff.role === "super_admin" ? "super-admin-badge" : "teacher-badge"}>
-                    {staff.role}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span className={staff.role === "super_admin" ? "super-admin-badge" : "teacher-badge"}>
+                      {staff.role}
+                    </span>
+                    {staff.role !== "super_admin" && staff.email !== "dp844771@gmail.com" && (
+                      <button
+                        type="button"
+                        onClick={() => handleRevokeStaff(staff.email)}
+                        disabled={revokingEmail === staff.email}
+                        style={{
+                          background: "#fee2e2",
+                          border: "1px solid #fca5a5",
+                          color: "#991b1b",
+                          padding: "4px 8px",
+                          borderRadius: "4px",
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          cursor: "pointer"
+                        }}
+                      >
+                        {revokingEmail === staff.email ? "..." : "Revoke"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))
             ) : (
               <div style={{ padding: "30px", textAlign: "center", color: "#6b7280", fontSize: "13px" }}>
-                No additional teachers granted access yet. Use the form to grant access to teachers.
+                No staff members configured yet. Use the form to grant access to teachers.
               </div>
             )}
           </div>
