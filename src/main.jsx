@@ -2655,57 +2655,59 @@ function Dashboard({ session, onExit }) {
     const verifyAndSyncRole = async () => {
       let roleFound = null;
 
-      // 1. Try serverless /api/sync-staff endpoint (powered by service_role key)
+      // 1. Primary: Direct database procedure claim_or_sync_staff_profile (Instant)
       try {
-        const token = session?.access_token;
-        if (token) {
-          const apiRes = await fetch("/api/sync-staff", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            }
-          });
-          if (apiRes.ok) {
-            const apiData = await apiRes.json();
-            if (apiData?.profile?.role) {
-              roleFound = apiData.profile.role;
-            }
-            if (apiData?.staffList && apiData.staffList.length > 0) {
-              setStaffList(apiData.staffList);
-            }
-          }
+        const { data: syncRes } = await supabase.rpc("claim_or_sync_staff_profile");
+        if (syncRes && syncRes.status === "active") {
+          roleFound = syncRes.role;
         }
-      } catch {
-        // Fallback if /api/ not reached
+      } catch (err) {
+        console.warn("claim_or_sync_staff_profile notice:", err);
       }
 
-      // 2. Try claim_or_sync_staff_profile RPC if available
+      // 2. Query staff_profiles table directly
       if (!roleFound) {
         try {
-          const { data: syncRes } = await supabase.rpc("claim_or_sync_staff_profile");
-          if (syncRes && syncRes.status === "active") {
-            roleFound = syncRes.role;
+          const { data: profile } = await supabase
+            .from("staff_profiles")
+            .select("role, display_name, user_id")
+            .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
+            .maybeSingle();
+
+          if (profile?.role) {
+            roleFound = profile.role;
+            if (profile.user_id !== session.user.id) {
+              await supabase.from("staff_profiles").update({ user_id: session.user.id }).eq("email", session.user.email);
+            }
+          } else if (session?.user?.email && session.user.email.toLowerCase() === "dp844771@gmail.com") {
+            roleFound = "super_admin";
           }
         } catch {}
       }
 
-      // 3. Query staff_profiles table directly
+      // 3. Fallback: serverless /api/sync-staff endpoint
       if (!roleFound) {
-        const { data: profile } = await supabase
-          .from("staff_profiles")
-          .select("role, display_name, user_id")
-          .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
-          .maybeSingle();
-
-        if (profile?.role) {
-          roleFound = profile.role;
-          if (profile.user_id !== session.user.id) {
-            await supabase.from("staff_profiles").update({ user_id: session.user.id }).eq("email", session.user.email);
+        try {
+          const token = session?.access_token;
+          if (token) {
+            const apiRes = await fetch("/api/sync-staff", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+              }
+            });
+            if (apiRes.ok) {
+              const apiData = await apiRes.json();
+              if (apiData?.profile?.role) {
+                roleFound = apiData.profile.role;
+              }
+              if (apiData?.staffList && apiData.staffList.length > 0) {
+                setStaffList(apiData.staffList);
+              }
+            }
           }
-        } else if (session?.user?.email === "dp844771@gmail.com") {
-          roleFound = "super_admin";
-        }
+        } catch {}
       }
 
       if (roleFound) {
@@ -2727,7 +2729,6 @@ function Dashboard({ session, onExit }) {
         if (queryError) setError(queryError.message);
         else {
           setLeads(data || []);
-          // Pre-populate notes map
           const initialNotes = {};
           (data || []).forEach((l) => {
             if (l.counselor_notes) initialNotes[l.id] = l.counselor_notes;
@@ -2806,68 +2807,7 @@ function Dashboard({ session, onExit }) {
     setGranting(true);
     setGrantMsg("");
 
-    // 1. Primary: Serverless API Endpoint (uses SUPABASE_SERVICE_ROLE_KEY to bypass RLS)
-    try {
-      const token = session?.access_token;
-      const apiResponse = await fetch("/api/grant-staff", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : ""
-        },
-        body: JSON.stringify({
-          email: cleanEmail,
-          displayName: cleanName,
-          role: newTeacherRole,
-          department: newTeacherDept,
-          callerEmail: session?.user?.email || ""
-        })
-      });
-
-      let resJson = null;
-      try {
-        resJson = await apiResponse.json();
-      } catch {}
-
-      console.log("grant-staff response:", apiResponse.status, resJson);
-
-      if (apiResponse.ok && resJson?.success) {
-        setGrantMsg(resJson.message || "Staff access granted successfully!");
-        if (resJson.user) {
-          setStaffList((prev) => {
-            const filtered = prev.filter((s) => s.email !== cleanEmail);
-            return [
-              {
-                user_id: resJson.user.id,
-                email: cleanEmail,
-                display_name: cleanName,
-                role: newTeacherRole,
-                department: newTeacherDept
-              },
-              ...filtered
-            ];
-          });
-        }
-        setNewTeacherEmail("");
-        setNewTeacherName("");
-        setGranting(false);
-        return;
-      }
-
-      if (resJson?.error) {
-        setGrantMsg(`Notice: ${resJson.error}`);
-        setGranting(false);
-        return;
-      } else if (!apiResponse.ok) {
-        setGrantMsg(`Notice: Server returned status ${apiResponse.status}. Please check Vercel functions.`);
-        setGranting(false);
-        return;
-      }
-    } catch (err) {
-      console.warn("API route not reachable, attempting RPC fallback...", err);
-    }
-
-    // 2. Direct Database Fallback: call grant_staff_access_by_email RPC
+    // 1. Primary: Direct Supabase RPC (Works immediately in database, bypasses Vercel deploy dependency)
     if (supabase) {
       try {
         const { data: rpcRes, error: rpcErr } = await supabase.rpc("grant_staff_access_by_email", {
@@ -2890,17 +2830,60 @@ function Dashboard({ session, onExit }) {
           return;
         }
 
-        const errMsg = rpcErr?.message || "";
-        if (errMsg.includes("grant_staff_access_by_email") || errMsg.includes("function") || errMsg.includes("not found")) {
-          setGrantMsg("Notice: Please apply '002_fix_staff_access.sql' in your Supabase SQL Editor once to activate instant database-level permissions.");
-        } else {
-          setGrantMsg(`Notice: ${errMsg}`);
+        if (rpcErr && rpcErr.message && !rpcErr.message.includes("not found")) {
+          setGrantMsg(`Notice: ${rpcErr.message}`);
+          setGranting(false);
+          return;
         }
       } catch (err) {
-        setGrantMsg(`Notice: ${err.message || "Error granting access"}`);
+        console.warn("Direct RPC error:", err);
       }
     }
 
+    // 2. Fallback: Serverless /api/grant-staff endpoint
+    try {
+      const token = session?.access_token;
+      const apiResponse = await fetch("/api/grant-staff", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : ""
+        },
+        body: JSON.stringify({
+          email: cleanEmail,
+          displayName: cleanName,
+          role: newTeacherRole,
+          department: newTeacherDept,
+          callerEmail: session?.user?.email || ""
+        })
+      });
+
+      let resJson = null;
+      try {
+        resJson = await apiResponse.json();
+      } catch {}
+
+      if (apiResponse.ok && resJson?.success) {
+        setGrantMsg(resJson.message || "Staff access granted successfully!");
+        const { data: refreshed } = await supabase
+          .from("staff_profiles")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (refreshed) setStaffList(refreshed);
+        setNewTeacherEmail("");
+        setNewTeacherName("");
+        setGranting(false);
+        return;
+      }
+
+      if (resJson?.error) {
+        setGrantMsg(`Notice: ${resJson.error}`);
+        setGranting(false);
+        return;
+      }
+    } catch {}
+
+    setGrantMsg("Notice: Please make sure you are signed in as Super Admin (dp844771@gmail.com).");
     setGranting(false);
   };
 
