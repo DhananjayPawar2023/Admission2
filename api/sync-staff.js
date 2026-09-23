@@ -90,12 +90,41 @@ export default async function handler(req, res) {
       }
     } catch {}
 
-    // C. Retrieve the active profile
-    const { data: currentProfile } = await supabaseAdmin
+    // C. Retrieve or auto-create the active profile
+    let { data: currentProfile } = await supabaseAdmin
       .from("staff_profiles")
       .select("*")
       .or(`user_id.eq.${userId},email.eq.${userEmail}`)
       .maybeSingle();
+
+    if (!currentProfile && userEmail) {
+      const assignedRole = userEmail === "dp844771@gmail.com" ? "super_admin" : "teacher";
+      const assignedName = user.user_metadata?.display_name || userEmail.split("@")[0];
+      const assignedDept = userEmail === "dp844771@gmail.com" ? "Admissions Directorate" : "IICT Faculty";
+
+      const { data: newProfile } = await supabaseAdmin
+        .from("staff_profiles")
+        .upsert(
+          {
+            user_id: userId,
+            email: userEmail,
+            display_name: assignedName,
+            role: assignedRole,
+            department: assignedDept
+          },
+          { onConflict: "user_id" }
+        )
+        .select()
+        .maybeSingle();
+
+      currentProfile = newProfile || {
+        user_id: userId,
+        email: userEmail,
+        display_name: assignedName,
+        role: assignedRole,
+        department: assignedDept
+      };
+    }
 
     let staffList = [];
     if (currentProfile?.role === "super_admin" || userEmail === "dp844771@gmail.com") {

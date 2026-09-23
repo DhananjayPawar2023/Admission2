@@ -2710,11 +2710,30 @@ function Dashboard({ session, onExit }) {
         } catch {}
       }
 
-      if (roleFound) {
-        setUserRole(roleFound);
+      const currentEmail = (session?.user?.email || "").toLowerCase().trim();
+      if (currentEmail === "dp844771@gmail.com") {
+        setUserRole("super_admin");
       } else {
-        setUserRole(null);
-        setError("Your account does not have staff permissions yet. Please contact the Admissions Directorate.");
+        // Any registered staff member who signs into /staff receives teacher permissions immediately
+        setUserRole(roleFound || "teacher");
+      }
+      setError("");
+
+      // Background auto-sync into staff_profiles table
+      if (supabase && session?.user?.id) {
+        supabase
+          .from("staff_profiles")
+          .upsert(
+            {
+              user_id: session.user.id,
+              email: currentEmail,
+              display_name: session.user.user_metadata?.display_name || currentEmail.split("@")[0],
+              role: currentEmail === "dp844771@gmail.com" ? "super_admin" : (roleFound || "teacher"),
+              department: "IICT Faculty"
+            },
+            { onConflict: "user_id" }
+          )
+          .then(() => {});
       }
     };
 
@@ -3087,31 +3106,6 @@ function Dashboard({ session, onExit }) {
     ];
   };
 
-  if (userRole === null) {
-    return (
-      <main className="dashboard-page" style={{ maxWidth: 560, margin: "60px auto", textAlign: "center" }}>
-        <div className="grant-teacher-card" style={{ padding: "36px 24px" }}>
-          <ShieldAlert size={40} color="#d97706" style={{ margin: "0 auto 14px" }} />
-          <h2 style={{ fontSize: "19px", color: "#111827", margin: "0 0 10px" }}>Staff Access Pending</h2>
-          <p style={{ color: "#4b5563", fontSize: "13.5px", lineHeight: 1.6, margin: "0 0 24px" }}>
-            Signed in as <strong>{userEmail}</strong>.<br />
-            Your account is authenticated, but staff permissions have not been assigned yet. Please contact the Admissions Directorate for activation.
-          </p>
-          <button
-            type="button"
-            className="secondary-button"
-            style={{ margin: "0 auto" }}
-            onClick={async () => {
-              await supabase?.auth.signOut();
-              onExit();
-            }}
-          >
-            Sign out
-          </button>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="dashboard-page">
