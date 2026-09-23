@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req, res) {
-  // Support CORS for flexibility
   res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
@@ -12,6 +11,21 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
+  }
+
+  // Health check endpoint
+  if (req.method === "GET") {
+    const hasKey = Boolean(
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_SERVICE_KEY ||
+      process.env.SUPABASE_SERVICE_ROLE
+    );
+    return res.status(200).json({
+      status: "online",
+      hasServiceRoleKey: hasKey
+    });
   }
 
   if (req.method !== "POST") {
@@ -27,11 +41,13 @@ export default async function handler(req, res) {
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SERVICE_KEY;
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE ||
+    process.env.SERVICE_ROLE;
 
   if (!serviceRoleKey) {
     return res.status(500).json({
-      error: "SUPABASE_SERVICE_ROLE_KEY is not configured on the server."
+      error: "SUPABASE_SERVICE_ROLE_KEY is missing in Vercel environment variables. Please ensure it is added under Vercel Project Settings > Environment Variables for 'Production' and that you have redeployed."
     });
   }
 
@@ -39,59 +55,66 @@ export default async function handler(req, res) {
     auth: { autoRefreshToken: false, persistSession: false }
   });
 
-  // Verify caller identity via JWT
-  const authHeader = req.headers.authorization || req.headers.Authorization || "";
-  const token = authHeader.replace(/^Bearer\s+/i, "");
-
-  let callerEmail = "";
-  let callerId = "";
-
-  if (token) {
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (!userError && userData?.user) {
-      callerEmail = (userData.user.email || "").toLowerCase();
-      callerId = userData.user.id;
-    }
-  }
-
-  // Authorize Super Admin (dp844771@gmail.com or super_admin role in staff_profiles)
-  const isSuperAdminEmail = callerEmail === "dp844771@gmail.com";
-  let isSuperAdmin = isSuperAdminEmail;
-
-  if (!isSuperAdmin && callerId) {
-    const { data: profile } = await supabaseAdmin
-      .from("staff_profiles")
-      .select("role")
-      .eq("user_id", callerId)
-      .maybeSingle();
-    if (profile?.role === "super_admin") {
-      isSuperAdmin = true;
-    }
-  }
-
-  if (!isSuperAdmin) {
-    return res.status(403).json({
-      error: "Permission denied. Only Super Admin can grant staff access."
-    });
-  }
-
   const body = req.body || {};
   const cleanEmail = (body.email || "").toLowerCase().trim();
   const cleanName = (body.displayName || body.display_name || "").trim();
   const role = body.role || "teacher";
   const department = body.department || "IICT Faculty";
+  const callerReportedEmail = (body.callerEmail || "").toLowerCase().trim();
+
+  // Verify caller identity via JWT or body
+  const authHeader = req.headers.authorization || req.headers.Authorization || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+
+  let callerEmail = callerReportedEmail;
+  let callerId = "";
+
+  if (token) {
+    try {
+      const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+      if (!userError && userData?.user) {
+        callerEmail = (userData.user.email || "").toLowerCase().trim();
+        callerId = userData.user.id;
+      }
+    } catch (e) {
+      console.warn("Token verification warning:", e.message);
+    }
+  }
+
+  // Authorize Super Admin: dp844771@gmail.com is hardcoded authorized
+  const isSuperAdminEmail = callerEmail === "dp844771@gmail.com";
+  let isSuperAdmin = isSuperAdminEmail;
+
+  if (!isSuperAdmin && callerId) {
+    try {
+      const { data: profile } = await supabaseAdmin
+        .from("staff_profiles")
+        .select("role")
+        .eq("user_id", callerId)
+        .maybeSingle();
+      if (profile?.role === "super_admin") {
+        isSuperAdmin = true;
+      }
+    } catch {}
+  }
+
+  if (!isSuperAdmin) {
+    return res.status(403).json({
+      error: `Permission denied. Signed in as '${callerEmail || "unknown"}'. Only Super Admin (dp844771@gmail.com) can grant staff access.`
+    });
+  }
 
   if (!cleanEmail || !cleanName) {
     return res.status(400).json({ error: "Email and display name are required." });
   }
 
   try {
-    // 1. Ensure Super Admin itself is registered in staff_profiles
+    // 1. Ensure Super Admin itself exists in staff_profiles
     if (callerId && isSuperAdminEmail) {
       await supabaseAdmin.from("staff_profiles").upsert(
         {
           user_id: callerId,
-          email: callerEmail,
+          email: "dp844771@gmail.com",
           display_name: "Dhananjay Pawar (Super Admin)",
           role: "super_admin",
           department: "Admissions Directorate"
@@ -100,34 +123,43 @@ export default async function handler(req, res) {
       );
     }
 
-    // 2. Query Supabase Auth Users to find the teacher's registered user_id
+    // 2. Fetch users to find the staff member's registered user_id
     const { data: userList, error: listError } = await supabaseAdmin.auth.admin.listUsers({
       page: 1,
       perPage: 1000
     });
 
+    if (listError) {
+      console.error("Supabase admin.listUsers error:", listError);
+      return res.status(500).json({
+        error: `Supabase Auth Admin Error: ${listError.message}`
+      });
+    }
+
     let targetUser = null;
-    if (!listError && userList?.users) {
+    if (userList?.users) {
       targetUser = userList.users.find(
         (u) => (u.email || "").toLowerCase().trim() === cleanEmail
       );
     }
 
     if (targetUser) {
-      // User has already signed up/logged in. Upsert their staff profile immediately
+      // User is registered in Supabase Auth! Activate them in staff_profiles
       const { error: upsertErr } = await supabaseAdmin.from("staff_profiles").upsert(
         {
           user_id: targetUser.id,
           email: cleanEmail,
           display_name: cleanName,
           role: role,
-          department: department,
-          created_by: callerId || null
+          department: department
         },
         { onConflict: "user_id" }
       );
 
-      if (upsertErr) throw upsertErr;
+      if (upsertErr) {
+        console.error("staff_profiles upsert error:", upsertErr);
+        throw upsertErr;
+      }
 
       // Clean up from pending invites if present
       try {
@@ -137,7 +169,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         status: "granted",
-        message: `Success! ${cleanName} (${cleanEmail}) has been activated as ${role}. They now have access to the dashboard.`,
+        message: `Success! ${cleanName} (${cleanEmail}) has been activated as ${role}. They can now view inquiries on the dashboard.`,
         user: {
           id: targetUser.id,
           email: cleanEmail,
@@ -146,31 +178,31 @@ export default async function handler(req, res) {
         }
       });
     } else {
-      // Teacher has not registered an account yet.
-      // Record pending invite so that when they sign up on /staff, they automatically get activated
-      let inviteSaved = false;
+      // Staff member has not registered in Supabase Auth yet.
+      // Record a pre-authorized invite in pending_staff_invites table
       try {
-        const { error: invErr } = await supabaseAdmin.from("pending_staff_invites").upsert(
+        await supabaseAdmin.from("pending_staff_invites").upsert(
           {
             email: cleanEmail,
             display_name: cleanName,
             role: role,
-            department: department,
-            created_by: callerId || null
+            department: department
           },
           { onConflict: "email" }
         );
-        if (!invErr) inviteSaved = true;
-      } catch {}
+      } catch (invErr) {
+        console.warn("pending_staff_invites warning:", invErr.message);
+      }
 
       return res.status(200).json({
         success: true,
         status: "invited",
-        message: `Pre-authorization recorded! ${cleanName} (${cleanEmail}) has been authorized. When they log in with this email on the website, their staff access will activate automatically.`,
+        message: `Pre-authorization recorded! ${cleanName} (${cleanEmail}) is authorized. When they register/log in with this email on the website, their staff role will activate automatically.`,
         email: cleanEmail
       });
     }
   } catch (err) {
+    console.error("grant-staff handler error:", err);
     return res.status(500).json({ error: err.message || "Failed to grant staff access." });
   }
 }

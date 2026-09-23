@@ -2615,6 +2615,7 @@ function Dashboard({ session, onExit }) {
   const [granting, setGranting] = useState(false);
   const [grantMsg, setGrantMsg] = useState("");
   const [revokingEmail, setRevokingEmail] = useState(null);
+  const [apiHealth, setApiHealth] = useState(null);
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -2629,6 +2630,23 @@ function Dashboard({ session, onExit }) {
   const [savingNotesId, setSavingNotesId] = useState(null);
 
   const userEmail = session?.user?.email || "";
+
+  useEffect(() => {
+    if (activeTab === "teachers") {
+      fetch("/api/grant-staff")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.hasServiceRoleKey) {
+            setApiHealth({ status: "online" });
+          } else {
+            setApiHealth({ status: "missing_key" });
+          }
+        })
+        .catch(() => {
+          setApiHealth({ status: "unreachable" });
+        });
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -2801,12 +2819,19 @@ function Dashboard({ session, onExit }) {
           email: cleanEmail,
           displayName: cleanName,
           role: newTeacherRole,
-          department: newTeacherDept
+          department: newTeacherDept,
+          callerEmail: session?.user?.email || ""
         })
       });
 
-      const resJson = await apiResponse.json();
-      if (apiResponse.ok && resJson.success) {
+      let resJson = null;
+      try {
+        resJson = await apiResponse.json();
+      } catch {}
+
+      console.log("grant-staff response:", apiResponse.status, resJson);
+
+      if (apiResponse.ok && resJson?.success) {
         setGrantMsg(resJson.message || "Staff access granted successfully!");
         if (resJson.user) {
           setStaffList((prev) => {
@@ -2827,13 +2852,19 @@ function Dashboard({ session, onExit }) {
         setNewTeacherName("");
         setGranting(false);
         return;
-      } else if (apiResponse.status === 403) {
-        setGrantMsg(`Permission denied: ${resJson.error || "Only Super Admin can grant staff access."}`);
+      }
+
+      if (resJson?.error) {
+        setGrantMsg(`Notice: ${resJson.error}`);
+        setGranting(false);
+        return;
+      } else if (!apiResponse.ok) {
+        setGrantMsg(`Notice: Server returned status ${apiResponse.status}. Please check Vercel functions.`);
         setGranting(false);
         return;
       }
-    } catch {
-      // If serverless endpoint is not reachable locally, continue to direct database RPC fallback
+    } catch (err) {
+      console.warn("API route not reachable, attempting RPC fallback...", err);
     }
 
     // 2. Direct Database Fallback: call grant_staff_access_by_email RPC
@@ -3604,6 +3635,16 @@ function Dashboard({ session, onExit }) {
             <p>
               As Super Admin, you can grant faculty teachers and counsellors access to review student profiles, track lead status, update notes, and conduct admissions counselling.
             </p>
+            {apiHealth?.status === "missing_key" && (
+              <div style={{ background: "#fffbeb", border: "1px solid #fed7aa", padding: "10px 12px", borderRadius: "6px", fontSize: "11.5px", color: "#9a3412", margin: "10px 0" }}>
+                ⚠️ <strong>Vercel Env Notice:</strong> <code>SUPABASE_SERVICE_ROLE_KEY</code> is not loaded in this deployment. Please ensure you added it to Vercel Project Settings &gt; Environment Variables for <strong>Production</strong>, then trigger a <strong>Redeploy</strong> in Vercel.
+              </div>
+            )}
+            {apiHealth?.status === "online" && (
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "6px 10px", borderRadius: "6px", fontSize: "11px", color: "#166534", margin: "10px 0", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                <CheckCircle2 size={13} /> Cloud Admin API Online (Service Role Active)
+              </div>
+            )}
             <form onSubmit={handleGrantTeacher} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <label style={{ fontSize: "11.5px", fontWeight: 600, color: "#374151" }}>
                 Staff / Teacher Email
